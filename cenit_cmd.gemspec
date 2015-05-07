@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "cenit_cmd"
-  s.version     = "0.0.2"
+  s.version     = "0.0.3"
   s.authors     = ["Miguel Sancho"]
   s.email       = ["sanchojaf@gmail.com"]
   s.homepage    = "https://github.com/openjaf/cenit_cmd"
