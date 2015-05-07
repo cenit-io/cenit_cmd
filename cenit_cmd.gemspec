@@ -3,7 +3,7 @@ Gem::Specification.new do |s|
   s.version     = "0.0.1"
   s.authors     = ["Miguel Sancho"]
   s.email       = ["sanchojaf@gmail.com"]
-  s.homepage    = "http://github.com/openjaf/cenithub"
+  s.homepage    = "https://github.com/openjaf/cenit_cmd"
   s.license     = %q{MIT}
   s.summary     = %q{Cenit Hub command line utility}
   s.description = %q{tools to create new collections}
