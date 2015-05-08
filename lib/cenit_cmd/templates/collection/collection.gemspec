@@ -1,6 +1,8 @@
+# coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require '<%= file_name %>/version'
+
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = '<%= file_name %>'
@@ -14,6 +16,10 @@ Gem::Specification.new do |s|
   # s.homepage  = 'http://www.cenitsaas.com'
 
   #s.files       = `git ls-files`.split("\n")
+  # s.bindir        = "exe"
+  # s.executables   = s.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  s.require_paths = ["lib"]
+
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'json'
   s.add_development_dependency 'collection_base'
