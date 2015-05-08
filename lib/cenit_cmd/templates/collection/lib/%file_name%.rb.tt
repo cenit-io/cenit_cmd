@@ -3,7 +3,7 @@ require 'json'
 
 module <%=class_name%>
 
-  require '<%=file_name%>_collection/base'
+  require '<%=file_name%>/base'
   require 'cenithub/client'
   require  'collection_base'
   #require 'MyDep_collection/base'
