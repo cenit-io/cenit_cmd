@@ -13,6 +13,11 @@ Gem::Specification.new do |s|
 
   #s.files       = `git ls-files`.split("\n")
   s.add_development_dependency 'rspec'
+  s.add_development_dependency 'json'
+  s.add_development_dependency 'collection_base'
+  s.add_development_dependency 'cenithub-client'
+
+  gem 'json'
   s.require_path = 'lib'
   s.requirements << 'none'
 end

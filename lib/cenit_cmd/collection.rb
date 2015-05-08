@@ -14,6 +14,14 @@ module CenitCmd
       empty_directory file_name
 
       directory 'lib', "#{file_name}/lib"
+      empty_directory "#{file_name}/lib/#{file_name}/connections"
+      empty_directory "#{file_name}/lib/#{file_name}/webhooks"
+      empty_directory "#{file_name}/lib/#{file_name}/connection_roles"
+      empty_directory "#{file_name}/lib/#{file_name}/events"
+      empty_directory "#{file_name}/lib/#{file_name}/flows"
+      empty_directory "#{file_name}/lib/#{file_name}/translators"
+      empty_directory "#{file_name}/lib/#{file_name}/support"
+      empty_directory "#{file_name}/lib/#{file_name}/support/sample"
 
       template 'collection.gemspec', "#{file_name}/#{file_name}.gemspec"
       template 'Gemfile', "#{file_name}/Gemfile"
@@ -22,6 +30,7 @@ module CenitCmd
       template 'Rakefile', "#{file_name}/Rakefile"
       template 'README.md', "#{file_name}/README.md"
       template 'rspec', "#{file_name}/.rspec"
+      template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
       template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
     end
 

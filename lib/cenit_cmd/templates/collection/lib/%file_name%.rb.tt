@@ -1,1 +1,49 @@
-require '<%=file_name%>'
+require '<%=file_name%>/version'
+require 'json'
+
+module <%=class_name%>
+
+  require '<%=file_name%>_collection/base'
+  require 'cenithub/client'
+  require  'collection_base'
+  #require 'MyDep_collection/base'
+
+  @c = <%=class_name%>::Collection.new
+
+  @collection_dep = []
+  # @collection_dep << MyDepCollection::Collection.new
+
+  def self.build_collection
+    shared = {}
+    models = ['flows','connection_roles','translators','events','connections','webhooks']
+    models.collect do |model|
+      hash =[]
+      @collection_dep.collect do |collection|
+        hash = hash + collection.process_model(model)
+      end
+      shared.merge!({model => hash + @c.process_model(model)})
+    end
+    hash =[]
+    @collection_dep.collect do |collection|
+      hash = hash + collection.process_libraries
+    end
+    shared.merge!({'libraries' => hash + @c.process_libraries})
+    {"data" => shared}
+  end
+
+  def self.shared_collection
+    shared = @c.shared_base
+    shared.merge!(build_collection)
+    {"shared_collection" => shared}
+  end
+
+  def self.push_collection (config)
+    Cenithub::Client.push(shared_collection.to_json, config)
+  end
+
+  def self.push_sample(model, config)
+    sample_data = @c.sample_data(model)
+    Cenithub::Client.push(sample_data.to_json, config)
+  end
+
+end
