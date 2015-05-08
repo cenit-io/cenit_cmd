@@ -2,7 +2,7 @@
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = '<%= file_name %>'
-  s.version     = '0.0.1'
+  s.version     =  <%= class_name %>::VERSION
   s.summary     = 'TODO: Add gem summary here'
   s.description = 'TODO: Add (optional) gem description here'
   s.required_ruby_version = '>= 2.0.0'
