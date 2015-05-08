@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   # s.homepage  = 'http://www.cenitsaas.com'
 
   #s.files       = `git ls-files`.split("\n")
-  #s.test_files  = `git ls-files -- {test,spec,features}/*`.split("\n")
+  s.add_development_dependency 'rspec'
   s.require_path = 'lib'
   s.requirements << 'none'
 end

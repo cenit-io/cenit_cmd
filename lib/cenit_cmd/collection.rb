@@ -4,7 +4,7 @@ module CenitCmd
     include Thor::Actions
 
     desc "builds a cenit_hub collection"
-    argument :file_name, :type => :string, :desc => '', :default => '.' #rails app_path
+    argument :file_name, :type => :string, :desc => 'collection path', :default => '.' 
 
     source_root File.expand_path('../templates/collection', __FILE__)
 
@@ -14,7 +14,6 @@ module CenitCmd
       empty_directory file_name
 
       directory 'lib', "#{file_name}/lib"
-      directory 'bin', "#{file_name}/bin"
 
       template 'collection.gemspec', "#{file_name}/#{file_name}.gemspec"
       template 'Gemfile', "#{file_name}/Gemfile"

@@ -1,5 +1,5 @@
 {
-    "name": "#{file_name} Collection",
+    "name": " #{file_name}  Collection",
     "description": "#{file_name} Collection package for install integration in CenitHub",
     "category": "Collection",
     "data": {"name": "#{file_name} collection"},
