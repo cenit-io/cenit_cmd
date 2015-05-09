@@ -9,5 +9,12 @@ coverage
 Gemfile.lock
 tmp
 nbproject
-pkg
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
 *.swp

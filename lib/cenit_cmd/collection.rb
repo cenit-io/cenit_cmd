@@ -31,7 +31,6 @@ module CenitCmd
       template 'README.md', "#{file_name}/README.md"
       template 'rspec', "#{file_name}/.rspec"
       template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
-      template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
     end
 
     def final_banner

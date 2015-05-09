@@ -4,9 +4,9 @@ require 'json'
 module <%=class_name%>
 
   require '<%=file_name%>/base'
-  require 'cenithub/client'
+  require 'cenit_client/client'
   require  'collection_base'
-  #require 'MyDep_collection/base'
+  #require 'my_dependency_collection/base'
 
   @c = <%=class_name%>::Collection.new
 

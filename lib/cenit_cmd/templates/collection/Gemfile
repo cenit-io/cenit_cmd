@@ -1,4 +1,10 @@
 source 'https://rubygems.org'
 
+gem 'rspec', :require => 'spec'
+gem 'json'
+
+gem 'cenit_client'
+gem 'collection_base'
+
 gemspec
 
