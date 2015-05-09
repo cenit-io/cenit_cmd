@@ -12,7 +12,7 @@ module CenitCmd
       use_suffix '_collection'
 
       empty_directory file_name
-
+      
       directory 'lib', "#{file_name}/lib"
       empty_directory "#{file_name}/lib/#{file_name}/connections"
       empty_directory "#{file_name}/lib/#{file_name}/webhooks"
@@ -20,8 +20,9 @@ module CenitCmd
       empty_directory "#{file_name}/lib/#{file_name}/events"
       empty_directory "#{file_name}/lib/#{file_name}/flows"
       empty_directory "#{file_name}/lib/#{file_name}/translators"
-      empty_directory "#{file_name}/lib/#{file_name}/support"
-      empty_directory "#{file_name}/lib/#{file_name}/support/sample"
+
+      empty_directory "#{file_name}/spec/support"
+      empty_directory "#{file_name}/spec/support/sample"
 
       template 'collection.gemspec', "#{file_name}/#{file_name}.gemspec"
       template 'Gemfile', "#{file_name}/Gemfile"
