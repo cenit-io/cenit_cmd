@@ -1,0 +1,14 @@
+require 'cenit/collection/<%= collection_name %>/version'
+require 'cenit/collection/base/build'
+
+module Cenit
+  module Collection
+    module <%= class_name %>
+      class Build < Cenit::Collection::Base::Build
+        def initialize
+          super(__dir__)
+        end
+      end
+    end
+  end
+end

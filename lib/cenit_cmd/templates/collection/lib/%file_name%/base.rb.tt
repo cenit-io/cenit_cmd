@@ -1,9 +1,0 @@
-require 'collection_base/base'
-
-module <%=class_name%>
-  class Collection < CollectionBase::Base
-    def initialize
-      super(__dir__)
-    end
-  end
-end

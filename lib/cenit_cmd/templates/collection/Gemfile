@@ -1,10 +1,9 @@
 source 'https://rubygems.org'
-
-gem 'rspec', :require => 'spec'
-gem 'json'
-
-gem 'cenit_client'
-gem 'collection_base'
-
 gemspec
+gem 'rspec', :require => 'spec'
+gem 'cenit-collection-base'
+gem 'cenit-client'
+gem 'hash-deep-merge'
+#Include Cenit Collection Gem dependency
+#gem 'cenit-collection-[My Dependency]'
 

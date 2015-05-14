@@ -4,22 +4,25 @@ module CenitCmd
     include Thor::Actions
 
     desc "builds a cenit_hub collection"
-    argument :file_name, :type => :string, :desc => 'collection path', :default => '.' 
+    argument :file_name, :type => :string, :desc => 'collection path', :default => '.'
+    argument :collection_name, :type => :string, :desc => 'collection name', :default => '.'
 
     source_root File.expand_path('../templates/collection', __FILE__)
 
     def generate
-      use_suffix '_collection'
+      @collection_name = @file_name
+      #use_suffix '_collection'
+      use_prefix 'cenit-collection-'
 
       empty_directory file_name
       
       directory 'lib', "#{file_name}/lib"
-      empty_directory "#{file_name}/lib/#{file_name}/connections"
-      empty_directory "#{file_name}/lib/#{file_name}/webhooks"
-      empty_directory "#{file_name}/lib/#{file_name}/connection_roles"
-      empty_directory "#{file_name}/lib/#{file_name}/events"
-      empty_directory "#{file_name}/lib/#{file_name}/flows"
-      empty_directory "#{file_name}/lib/#{file_name}/translators"
+      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/connections"
+      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/webhooks"
+      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/connection_roles"
+      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}//events"
+      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}//flows"
+      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/translators"
 
       empty_directory "#{file_name}/spec/support"
       empty_directory "#{file_name}/spec/support/sample"
@@ -46,12 +49,19 @@ module CenitCmd
 
     no_tasks do
       def class_name
-        Thor::Util.camel_case file_name
+        Thor::Util.camel_case @collection_name
       end
 
       def use_suffix(suffix)
         unless file_name =~ /#{suffix}$/
           @file_name = Thor::Util.snake_case(file_name) + suffix
+        end
+      end
+
+
+      def use_prefix(prefix)
+        unless file_name =~ /#{prefix}$/
+          @file_name = prefix + Thor::Util.snake_case(file_name)
         end
       end
     end

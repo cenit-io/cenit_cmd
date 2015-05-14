@@ -1,12 +1,12 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require '<%= file_name %>/version'
+require 'cenit/collection/<%= collection_name %>/version'
 
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = '<%= file_name %>'
-  s.version     =  <%= class_name %>::VERSION
+  s.version     =  Cenit::Collection::<%= class_name %>::VERSION
   s.summary     = 'TODO: Add gem summary here'
   s.description = 'TODO: Add (optional) gem description here'
   s.required_ruby_version = '>= 2.0.0'
