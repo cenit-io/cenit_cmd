@@ -37,7 +37,7 @@ Or install it yourself as:
    
 ###Install Shared Collection
 
-run `bundle exec irb -I lib -r '<%= file_name %>'`
+run `bundle exec irb -I lib -r 'cenit/collection/<%= collection_name %>'`
 
 Configure your Cenithub Client API
 
@@ -49,6 +49,12 @@ OR
 ```ruby
 config = {push_url: 'https://www.cenithub.com/api/v1/push',user_key: 'My User Key',user_token: 'My User Token'}
 ```
+Show Hash Collection
+
+```ruby
+Cenit::Collection::<%= class_name %>.show_collection(config)
+```
+
 Load Shared Collection into Cenithub
 
 ```ruby

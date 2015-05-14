@@ -5,9 +5,6 @@ module Cenit
       require "cenit/collection/<%= collection_name %>/build"
       require "cenit/client"
 
-      #Include Collection Gem dependency
-      #require "cenit/collection/[My Dependency Collection]/build"
-
       #bundle exec irb -I lib -r 'cenit/collection/<%= collection_name %>'
       #config = {:push_url => "https://www.cenithub.com/api/v1/push", :connection_token => "My Conn Token", :connection_key => "My Conn Key"}
       #config = {:push_url => "https://www.cenithub.com/api/v1/push", :user_token => "My User Token", :user_key => "My User Key"}
@@ -16,6 +13,8 @@ module Cenit
 
       @<%= collection_name %> = Cenit::Collection::<%= class_name %>::Build.new
 
+      #Include Collection Gem dependency
+      #require "cenit/collection/[My Dependency Collection]/build"
       #Collection dependency
       #@<%= collection_name %>.register_dep(Cenit::Collection::[My Dependency Collection]::Build.new)
 

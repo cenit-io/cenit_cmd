@@ -3,7 +3,7 @@ gemspec
 gem 'rspec', :require => 'spec'
 gem 'cenit-collection-base'
 gem 'cenit-client'
-gem 'hash-deep-merge'
+gem 'activesupport'
 #Include Cenit Collection Gem dependency
 #gem 'cenit-collection-[My Dependency]'
 
