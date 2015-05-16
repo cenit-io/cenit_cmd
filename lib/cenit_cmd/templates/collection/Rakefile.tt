@@ -21,11 +21,11 @@ Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://guides.rubygems.org/specification-reference/ for more options
   gem.name = '<%= file_name %>'
   gem.license = "MIT"
-  gem.summary = %Q{ Shared Collection '<%= file_name %>' }
-  gem.description = %Q{ Shared Collection '<%= file_name %>' }
+  gem.summary = %Q{ Shared Collection <%= file_name -%> }
+  gem.description = %Q{ Shared Collection <%= file_name -%> }
   gem.author = @author
   gem.email = @email
-  gem.homepage = "https://github.com/#{@github_username}/collection-cenit-<%= file_name %>"
+  gem.homepage = "https://github.com/#{@github_username}/<%= file_name -%>"
   
   # dependencies defined in Gemfile
 end
@@ -44,7 +44,7 @@ end
 desc "create a new git and related GitHub's repository'"
 task :create_git_and_github_repo do
   options = {
-    project_name: 'collection-cenit-foo', 
+    project_name: '<%= file_name -%>', 
     user_name: @authors, 
     user_email: @email, 
     github_username: @github_username,
