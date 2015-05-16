@@ -20,8 +20,8 @@ module CenitCmd
       empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/connections"
       empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/webhooks"
       empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/connection_roles"
-      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}//events"
-      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}//flows"
+      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/events"
+      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/flows"
       empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/translators"
 
       empty_directory "#{file_name}/spec/support"
