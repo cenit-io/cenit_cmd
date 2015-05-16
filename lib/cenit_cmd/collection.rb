@@ -27,7 +27,6 @@ module CenitCmd
       empty_directory "#{file_name}/spec/support"
       empty_directory "#{file_name}/spec/support/sample"
 
-      template 'collection.gemspec', "#{file_name}/#{file_name}.gemspec"
       template 'Gemfile', "#{file_name}/Gemfile"
       template 'gitignore', "#{file_name}/.gitignore"
       template 'LICENSE', "#{file_name}/LICENSE"
