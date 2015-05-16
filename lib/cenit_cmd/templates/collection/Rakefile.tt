@@ -26,6 +26,33 @@ Jeweler::Tasks.new do |gem|
 end
 Jeweler::RubygemsDotOrgTasks.new
 
+class Jeweler::Generator
+  def target_dir
+    '.'
+  end
+  def create_git_and_github_repo
+    create_version_control
+    create_and_push_repo
+  end
+end
+
+desc "create a new git and related GitHub's repository'"
+task :create_git_and_github_repo do
+  github_username = ask("Github username: ") { |q| q.echo = true }
+  author = ask("User name: ") { |q| q.echo = true }
+  email = ask("Email: ") { |q| q.echo = true }
+  options = {
+    project_name: 'collection-cenit-foo', 
+    user_name: author, 
+    user_email: email, 
+    github_username: github_username,
+    testing_framework: :rspec, 
+    documentation_framework: :rdoc
+  }
+  g = Jeweler::Generator.new(options)
+  g.create_git_and_github_repo
+end
+
 require 'rspec/core'
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|
