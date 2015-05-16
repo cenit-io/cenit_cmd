@@ -83,13 +83,13 @@ Show Hash Collection
 Cenit::Collection::<%= class_name %>.show_collection(config)
 ```
 
-Load Shared Collection into Cenithub
+Load Shared Collection into CenitHub
 
 ```ruby
 Cenit::Collection::<%= class_name %>.push_collection(config)
 ```
 
-Setup Shared Collection into Cenithub
+Setup Shared Collection into CenitHub
 
 ```ruby
 Cenit::Collection::<%= class_name %>.pull_collection(config)
@@ -97,7 +97,7 @@ Cenit::Collection::<%= class_name %>.pull_collection(config)
 Push sample data into Cenithub
 
 ```ruby
-Cenit::Collection::<%= class_name %>.push_sample('sms',config)
+Cenit::Collection::<%= class_name %>.push_sample(config)
 ```
 
 ## Development
