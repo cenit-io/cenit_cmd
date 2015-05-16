@@ -2,21 +2,21 @@ module Cenit
   module Collection
     module <%= class_name %>
 
-      require "cenit/collection/<%= collection_name %>/build"
-      require "cenit/client"
+      # require "cenit/collection/<%= collection_name %>/build"
+      # require "cenit/client"
 
-      #bundle exec irb -I lib -r 'cenit/collection/<%= collection_name %>'
-      #config = {:push_url => "https://www.cenithub.com/api/v1/push", :connection_token => "My Conn Token", :connection_key => "My Conn Key"}
-      #config = {:push_url => "https://www.cenithub.com/api/v1/push", :user_token => "My User Token", :user_key => "My User Key"}
-      #Cenit::Collection::<%= class_name %>.push_collection config
-      #Cenit::Collection::<%= class_name %>.shared_collection
+      # bundle exec irb -I lib -r 'cenit/collection/<%= collection_name %>'
+      # config = {:push_url => "https://www.cenithub.com/api/v1/push", :connection_token => "My Conn Token", :connection_key => "My Conn Key"}
+      # config = {:push_url => "https://www.cenithub.com/api/v1/push", :user_token => "My User Token", :user_key => "My User Key"}
+      # Cenit::Collection::<%= class_name %>.push_collection config
+      # Cenit::Collection::<%= class_name %>.shared_collection
 
       @<%= collection_name %> = Cenit::Collection::<%= class_name %>::Build.new
 
-      #Include Collection Gem dependency
-      #require "cenit/collection/[My Dependency Collection]/build"
-      #Collection dependency
-      #@<%= collection_name %>.register_dep(Cenit::Collection::[My Dependency Collection]::Build.new)
+      # Include Collection Gem dependency
+      # require "cenit/collection/[My Dependency Collection]/build"
+      # Collection dependency
+      # @<%= collection_name %>.register_dep(Cenit::Collection::[My Dependency Collection]::Build.new)
 
       def self.push_collection (config)
         Cenit::Client.push(@<%= collection_name %>.shared_collection.to_json, config)
