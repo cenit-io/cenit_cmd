@@ -12,7 +12,7 @@ end
 require 'rake'
 
  # Hey, this is you, the author (or me in this case)
- @author = ['Miguel Sancho']
+ @authors = ['Miguel Sancho']
  @email  = 'sanchojaf@gmail.com'
  @github_username = 'sanchojaf'
 
@@ -23,7 +23,7 @@ Jeweler::Tasks.new do |gem|
   gem.license = "MIT"
   gem.summary = %Q{ Shared Collection <%= file_name -%> }
   gem.description = %Q{ Shared Collection <%= file_name -%> }
-  gem.author = @author
+  gem.author = @authors
   gem.email = @email
   gem.homepage = "https://github.com/#{@github_username}/<%= file_name -%>"
   
