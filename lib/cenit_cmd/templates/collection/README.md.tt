@@ -23,17 +23,45 @@ Or install it yourself as:
 
     $ gem install <%= file_name %>
 
-###Structure
+### Structure
 
-|Cenit
-    |Collection
-       | Connection Roles
-       | Connections
-       | Webhooks
-       | Libraries
-       | Flows
-       | Translators
-       | Events
+```
+% tree
+.
+├── cenit-collection-'<%= file_name %>'.gemspec
+├── Gemfile
+├── .gitignore
+├── .rspec
+├── README.md
+├── Rakefile
+├── LICENSE
+└── bin
+    └── console
+    └── setup
+└── lib
+    └── cenit
+        └── collection
+            └── '<%= file_name %>'
+                 └── connections
+                 └── webhooks
+                 └── connection_sets
+                 └── translators
+                 └── events
+                 └── flows
+                 └── libraries
+                 └── index.json
+                 └── build.rb
+                 └── version.rb
+            └── '<%= file_name %>'.rb
+└── spec
+    └── cenit
+        └── collection
+            └── '<%= file_name %>'_spec.rb
+    └── spec_helper.rb
+    └── support
+        └── samples
+
+```
    
 ###Install Shared Collection
 
