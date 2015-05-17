@@ -6,7 +6,7 @@ Cenit is an open source social platform as a service for data and business integ
 
 ## Using cenit cmd
 
-  cenit collection foo
+    $ cenit collection foo
 
 
 By default its possible read the options from `./gitconfig`
@@ -16,17 +16,17 @@ By default its possible read the options from `./gitconfig`
 Before proceeding, take a minute to setup your git environment, specifically setup your name and 
 email for git and your username and token for GitHub:
 
-```bash
-$ git config --global user.email johndoe@example.com
-$ git config --global user.name 'John Doe'
-$ git config --global github.user johndoe
-$ git config --global github.token 55555555555555
-```
+
+    $ git config --global user.email johndoe@example.com
+    $ git config --global user.name 'John Doe'
+    $ git config --global github.user johndoe
+    $ git config --global github.token 55555555555555
+
 
 If you prefer use explicit options then you can do
 
-   cenit collection foo --user-name=Miguel --user-email=sanchojaf@gmail.com --github-username=sanchojaf 
-   
+    $ cenit collection foo --user-name=Miguel --user-email=sanchojaf@gmail.com --github-username=sanchojaf 
+
 Other options are:
 
 | Option                       | Descrition                                                                                         |
@@ -73,27 +73,27 @@ Other options are:
 
 ### Consider the next steps in your new collection repo
 
-* Move to the new collection folder.
+Move to the new collection folder.
 
-   cd my_collection
+    $ cd my_collection
 
-* Create a new git and related GitHub's repository
+Create a new git and related GitHub's repository
 
-   rake create_repo
-   
-* Commit and push until you are happy with your changes, see a real example in https://github.com/cenit-hub/cenit-collection-twilio
+    $ rake create_repo
 
-* Generate a version
+Commit and push until you are happy with your changes, see a real example in https://github.com/cenit-hub/cenit-collection-twilio
 
-   rake version:write
+Generate a version
 
-* Tag and push release to git
+    $ rake version:write
 
-  rake git:release
+Tag and push release to git
 
-* Shared your collection in https://rubygems.org
+    $ rake git:release
 
-  rake release
+Shared your collection in https://rubygems.org
+
+    $ rake release
 
 ## About Cenit
 
