@@ -55,8 +55,16 @@ module CenitCmd
       say %Q{
         #{'*' * 80}
         
+        Consider the next steps:
+        
+        Move to the new collection folder.
+        > cd #{file_name}
+        
         Create a new git and related GitHub's repository
         > rake create_repo
+        
+        Commit and push until you are happy with your changes
+        ...
         
         Generate a version
         > rake version:write
@@ -64,7 +72,7 @@ module CenitCmd
         Tag and push release to git
         > rake git:release
         
-        After add your changes consider listing your shared collection in https://rubygems.org
+        Shared your collection in https://rubygems.org
         > rake release
 
         #{'*' * 80}
@@ -84,14 +92,9 @@ module CenitCmd
       
       # Expose git config here, so we can stub it out for test environments
       def git_config
-        @git_config  ||=  if Pathname.new("~/.gitconfig").expand_path.exist?
-                           Git.global_config
-                         else
-                           {}
-                         end
-
+        @git_config  ||=  Pathname.new("~/.gitconfig").expand_path.exist? ? Git.global_config : {}
       end
-      
+
       def validate_argument
         if @user_name.nil?
           $stderr.puts %Q{No user.name found in ~/.gitconfig. Please tell git about yourself (see http://help.github.com/git-email-settings/ for details). For example: git config --global user.name "mad voo"}
