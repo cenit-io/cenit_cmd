@@ -6,7 +6,7 @@ Cenit is an open source social platform as a service for data and business integ
 
 ## Using cenit cmd
 
-  cenit collection foo --user-name=Miguel --user-email=sanchojaf@gmail.com --github-username=sanchojaf
+  cenit collection foo
 
 
 By default its possible read the options from `./gitconfig`
@@ -23,9 +23,9 @@ $ git config --global github.user johndoe
 $ git config --global github.token 55555555555555
 ```
 
-Then you can only do.
+If you prefer use explicit options then you can do
 
-   cenit collection foo
+   cenit collection foo --user-name=Miguel --user-email=sanchojaf@gmail.com --github-username=sanchojaf --summary="Foo Shared Collection to be use in Cenit"
    
 the-perfect-gem
 

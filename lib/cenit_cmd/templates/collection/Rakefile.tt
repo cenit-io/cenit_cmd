@@ -16,8 +16,8 @@ Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://guides.rubygems.org/specification-reference/ for more options
   gem.name = '<%= file_name %>'
   gem.license = "MIT"
-  gem.summary = %Q{ Shared Collection <%= file_name -%> }
-  gem.description = %Q{ Shared Collection <%= file_name -%> }
+  gem.summary = '<%= @summary -%>'
+  gem.description = '<%= @summary -%>'
   gem.author = '<%= @user_name -%>'
   gem.email = '<%= @user_email -%>'
   gem.homepage = "https://github.com/<%= @github_username -%>/<%= file_name -%>"

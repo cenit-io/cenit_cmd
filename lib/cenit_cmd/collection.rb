@@ -14,7 +14,7 @@ module CenitCmd
     class_option :user_name
     class_option :user_email
     class_option :github_username
-    
+    class_option :summary
     @generated = false
     def generate
       @collection_name = @file_name
@@ -22,6 +22,7 @@ module CenitCmd
       @user_name = options[:user_name] || git_config['user.name']
       @user_email = options[:user_email] || git_config['user.email']
       @github_username = options[:github_username] || git_config['github.user']
+      @summary = options[:github_username] || "Shared Collection #{@file_name} to be use in Cenit" 
       
       return unless validate_argument
        
@@ -58,22 +59,22 @@ module CenitCmd
         Consider the next steps:
         
         Move to the new collection folder.
-        > cd #{file_name}
+        $ cd #{file_name}
         
         Create a new git and related GitHub's repository
-        > rake create_repo
+        $ rake create_repo
         
         Commit and push until you are happy with your changes
         ...
         
         Generate a version
-        > rake version:write
+        $ rake version:write
         
         Tag and push release to git
-        > rake git:release
+        $ rake git:release
         
         Shared your collection in https://rubygems.org
-        > rake release
+        $ rake release
         
         Visit README.md for more details.
 
