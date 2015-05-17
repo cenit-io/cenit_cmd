@@ -54,8 +54,18 @@ module CenitCmd
       return unless @generated
       say %Q{
         #{'*' * 80}
-
-        Consider listing your collection in https://rubygems.org
+        
+        Create a new git and related GitHub's repository
+        > rake create_repo
+        
+        Generate a version
+        > rake version:write
+        
+        Tag and push release to git
+        > rake git:release
+        
+        After add your changes consider listing your shared collection in https://rubygems.org
+        > rake release
 
         #{'*' * 80}
       }

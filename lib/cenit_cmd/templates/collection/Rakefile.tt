@@ -37,7 +37,7 @@ class Jeweler::Generator
 end
       
 desc "create a new git and related GitHub's repository'"
-task :create_git_and_github_repo do
+task :create_repo do
   options = {
     project_name: '<%= file_name -%>', 
     user_name: '<%= @user_name -%>', 
