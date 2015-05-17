@@ -17,10 +17,10 @@ Jeweler::Tasks.new do |gem|
   gem.name = '<%= file_name %>'
   gem.license = "MIT"
   gem.summary = '<%= @summary -%>'
-  gem.description = '<%= @summary -%>'
+  gem.description = '<%= @description -%>'
   gem.author = '<%= @user_name -%>'
   gem.email = '<%= @user_email -%>'
-  gem.homepage = "https://github.com/<%= @github_username -%>/<%= file_name -%>"
+  gem.homepage = '<%= @homepage -%>'
   
   # dependencies defined in Gemfile
 end
@@ -44,6 +44,8 @@ task :create_repo do
     user_email: '<%= @user_email -%>',
     github_username: '<%= @github_username -%>',
     summary: '<%= @summary -%>',
+    description: '<%= @description -%>',
+    homepage: '<%= @homepage -%>',
     testing_framework: :rspec, 
     documentation_framework: :rdoc
   }

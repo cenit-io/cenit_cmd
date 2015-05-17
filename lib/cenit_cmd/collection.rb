@@ -15,6 +15,9 @@ module CenitCmd
     class_option :user_email
     class_option :github_username
     class_option :summary
+    class_option :description
+    class_option :homepage
+    
     @generated = false
     def generate
       @collection_name = @file_name
@@ -22,7 +25,9 @@ module CenitCmd
       @user_name = options[:user_name] || git_config['user.name']
       @user_email = options[:user_email] || git_config['user.email']
       @github_username = options[:github_username] || git_config['github.user']
-      @summary = options[:github_username] || "Shared Collection #{@file_name} to be use in Cenit" 
+      @summary = options[:summary] || "Shared Collection #{@file_name} to be use in Cenit"
+      @description = options[:description] || @summary
+      @homepage = options[:homepage] || "https://github.com/#{@github_username}/#{@file_name}"
       
       return unless validate_argument
        

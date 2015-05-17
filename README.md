@@ -25,9 +25,15 @@ $ git config --global github.token 55555555555555
 
 If you prefer use explicit options then you can do
 
-   cenit collection foo --user-name=Miguel --user-email=sanchojaf@gmail.com --github-username=sanchojaf --summary="Foo Shared Collection to be use in Cenit"
+   cenit collection foo --user-name=Miguel --user-email=sanchojaf@gmail.com --github-username=sanchojaf 
    
-the-perfect-gem
+Other options are:
+
+| Option                       | Descrition                                                                                         |
+|------------------------------| ---------------------------------------------------------------------------------------------------| 
+| --summary=[SUMMARY]          | sumary for your project (defaults "Shared Collection cenit-collection-foo to be use in Cenit")     |
+| --description=[DESCRIPTION]  | description for your project (defaults "Shared Collection cenit-collection-foo to be use in Cenit")| 
+| --homepage=[HOMEPAGE]        | the homepage for your project (defaults to the GitHub repo)                                        |
 
 ### Structure
 
