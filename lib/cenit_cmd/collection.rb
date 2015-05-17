@@ -22,6 +22,8 @@ module CenitCmd
     def generate
       @collection_name = @file_name
       
+      use_prefix 'cenit-collection-'
+      
       @user_name = options[:user_name] || git_config['user.name']
       @user_email = options[:user_email] || git_config['user.email']
       @github_username = options[:github_username] || git_config['github.user']
@@ -30,8 +32,6 @@ module CenitCmd
       @homepage = options[:homepage] || "https://github.com/#{@github_username}/#{@file_name}"
       
       return unless validate_argument
-       
-      use_prefix 'cenit-collection-'
 
       empty_directory file_name
       
