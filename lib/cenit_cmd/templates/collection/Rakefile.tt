@@ -11,11 +11,6 @@ rescue Bundler::BundlerError => e
 end
 require 'rake'
 
- # Hey, this is you, the author (or me in this case)
- @authors = ['Miguel Sancho']
- @email  = 'sanchojaf@gmail.com'
- @github_username = 'sanchojaf'
-
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://guides.rubygems.org/specification-reference/ for more options
@@ -23,9 +18,9 @@ Jeweler::Tasks.new do |gem|
   gem.license = "MIT"
   gem.summary = %Q{ Shared Collection <%= file_name -%> }
   gem.description = %Q{ Shared Collection <%= file_name -%> }
-  gem.author = @authors
-  gem.email = @email
-  gem.homepage = "https://github.com/#{@github_username}/<%= file_name -%>"
+  gem.author = '<%= @user_name -%>'
+  gem.email = '<%= @user_email -%>'
+  gem.homepage = "https://github.com/<%= @github_username -%>/<%= file_name -%>"
   
   # dependencies defined in Gemfile
 end
@@ -40,14 +35,14 @@ class Jeweler::Generator
     create_and_push_repo
   end
 end
-
+      
 desc "create a new git and related GitHub's repository'"
 task :create_git_and_github_repo do
   options = {
     project_name: '<%= file_name -%>', 
-    user_name: @authors, 
-    user_email: @email, 
-    github_username: @github_username,
+    user_name: '<%= @user_name -%>', 
+    user_email: '<%= @user_email -%>',
+    github_username: '<%= @github_username -%>',
     testing_framework: :rspec, 
     documentation_framework: :rdoc
   }
