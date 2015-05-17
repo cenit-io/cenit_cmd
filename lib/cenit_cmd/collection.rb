@@ -14,6 +14,8 @@ module CenitCmd
     class_option :user_name
     class_option :user_email
     class_option :github_username
+    
+    @generated = false
     def generate
       @collection_name = @file_name
       
@@ -45,9 +47,11 @@ module CenitCmd
       template 'README.md', "#{file_name}/README.md"
       template 'rspec', "#{file_name}/.rspec"
       template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
+      @generated = true
     end
 
     def final_banner
+      return unless @generated
       say %Q{
         #{'*' * 80}
 
