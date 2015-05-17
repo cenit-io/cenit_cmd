@@ -1,6 +1,10 @@
+This is a new Shared Collection (integration settgings) to be use in Cenit, named <%= file_name %>.
+
+Cenit is an open source social platform as a service for data and business integration.
+
 # CenitCollection<%= class_name %>
 
-Welcome to your new shared collection in this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/cenit/collection/<%= collection_name %>`. To experiment with that code, `rake console` for an interactive prompt.
+You'll find the files you need to be able to package up your Collection library into a gem. To experiment with that collection use `rake console` for an interactive prompt.
 
 ## Installation
 
@@ -52,7 +56,6 @@ Or install it yourself as:
     └── spec_helper.rb
     └── support
         └── samples
-
 ```
 
 ### Upload your Shared Collection to Cenit Hub.

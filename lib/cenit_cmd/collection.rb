@@ -74,6 +74,8 @@ module CenitCmd
         
         Shared your collection in https://rubygems.org
         > rake release
+        
+        Visit README.md for more details.
 
         #{'*' * 80}
       }

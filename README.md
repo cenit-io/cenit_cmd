@@ -25,7 +25,45 @@ $ git config --global github.token 55555555555555
 
 Then you can only do.
 
-   cenit collection my_collection
+   cenit collection foo
+   
+the-perfect-gem
+
+### Structure
+
+```
+% tree
+.
+├── cenit-collection-foo.gemspec
+├── Gemfile
+├── .gitignore
+├── .rspec
+├── README.md
+├── Rakefile
+├── LICENSE
+└── lib
+    └── cenit
+        └── collection
+            └── foo
+                 └── connections
+                 └── webhooks
+                 └── connection_sets
+                 └── translators
+                 └── events
+                 └── flows
+                 └── libraries
+                 └── index.json
+                 └── build.rb
+                 └── version.rb
+            └── foo.rb
+└── spec
+    └── cenit
+        └── collection
+            └── foo_spec.rb
+    └── spec_helper.rb
+    └── support
+        └── samples
+```
 
 ### Consider the next steps in your new collection repo
 
