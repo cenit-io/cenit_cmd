@@ -25,15 +25,18 @@ email for git and your username and token for GitHub:
 
 If you prefer use explicit options then you can do
 
-    $ cenit collection foo --user-name=Miguel --user-email=sanchojaf@gmail.com --github-username=sanchojaf 
+    $ cenit collection foo --user-email=sanchojaf@gmail.com --github-username=sanchojaf 
 
 Other options are:
 
-| Option                       | Descrition                                                                                         |
-|------------------------------| ---------------------------------------------------------------------------------------------------| 
-| --summary=[SUMMARY]          | sumary for your project (defaults "Shared Collection cenit-collection-foo to be use in Cenit")     |
-| --description=[DESCRIPTION]  | description for your project (defaults "Shared Collection cenit-collection-foo to be use in Cenit")| 
-| --homepage=[HOMEPAGE]        | the homepage for your project (defaults to the GitHub repo)                                        |
+| Option                              | Descrition                                                                                         |
+|-------------------------------------| ---------------------------------------------------------------------------------------------------|
+| --user-name=[USER_NAME]             | the user's name, ie that is credited in the LICENSE                                                |
+| --user-email=[USER_EMAIL]           | the user's email, ie that is credited in the Gem specification                                     |
+| --github-username=[GITHUB_USERNAME] | username in Github                                                                                 |
+| --summary=[SUMMARY]                 | specify a summary (defaults 'Shared Collection cenit-collection-foo to be use in Cenit')           |
+| --description=[DESCRIPTION]         | specify a description (defaults 'Shared Collection cenit-collection-foo to be use in Cenit')       | 
+| --homepage=[HOMEPAGE]               | the homepage for your project (defaults to the GitHub repo)                                        |
 
 ### Structure
 
