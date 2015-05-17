@@ -43,6 +43,7 @@ task :create_repo do
     user_name: '<%= @user_name -%>', 
     user_email: '<%= @user_email -%>',
     github_username: '<%= @github_username -%>',
+    summary: '<%= @summary -%>',
     testing_framework: :rspec, 
     documentation_framework: :rdoc
   }
