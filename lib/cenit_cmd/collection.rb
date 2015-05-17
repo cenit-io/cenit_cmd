@@ -15,12 +15,13 @@ module CenitCmd
     class_option :user_email
     class_option :github_username
     def generate
-      
       @collection_name = @file_name
       
       @user_name = options[:user_name] || git_config['user.name']
       @user_email = options[:user_email] || git_config['user.email']
       @github_username = options[:github_username] || git_config['github.user']
+      
+      return unless validate_argument
        
       use_prefix 'cenit-collection-'
 
@@ -75,6 +76,20 @@ module CenitCmd
                            {}
                          end
 
+      end
+      
+      def validate_argument
+        if @user_name.nil?
+          $stderr.puts %Q{No user.name found in ~/.gitconfig. Please tell git about yourself (see http://help.github.com/git-email-settings/ for details). For example: git config --global user.name "mad voo"}
+          return false
+        elsif @user_email.nil?
+          $stderr.puts %Q{No user.email found in ~/.gitconfig. Please tell git about yourself (see http://help.github.com/git-email-settings/ for details). For example: git config --global user.email mad.vooo@gmail.com}
+          return false
+        elsif @github_username.nil?
+          $stderr.puts %Q{Please specify --github-username or set github.user in ~/.gitconfig (see http://github.com/blog/180-local-github-config for details). For example: git config --global github.user defunkt}
+          return false
+        end
+        true
       end
       
     end
