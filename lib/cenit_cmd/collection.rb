@@ -1,17 +1,27 @@
-module CenitCmd
+require 'byebug'
+require 'pathname'
+require 'git'
 
+module CenitCmd
   class Collection < Thor::Group
     include Thor::Actions
 
-    desc "builds a cenit_hub collection"
-    argument :file_name, :type => :string, :desc => 'collection path', :default => '.'
-    argument :collection_name, :type => :string, :desc => 'collection name', :default => '.'
-
+    desc "builds a cenit_hub shared collection"
+    argument :file_name, type: :string, desc: 'collection path', default: '.'
+    argument :collection_name, type: :string, desc: 'collection name', default: '.'
     source_root File.expand_path('../templates/collection', __FILE__)
 
+    class_option :user_name
+    class_option :user_email
+    class_option :github_username
     def generate
+      
       @collection_name = @file_name
-      #use_suffix '_collection'
+      
+      @user_name = options[:user_name] || git_config['user.name']
+      @user_email = options[:user_email] || git_config['user.email']
+      @github_username = options[:github_username] || git_config['github.user']
+       
       use_prefix 'cenit-collection-'
 
       empty_directory file_name
@@ -51,19 +61,22 @@ module CenitCmd
         Thor::Util.camel_case @collection_name
       end
 
-      def use_suffix(suffix)
-        unless file_name =~ /#{suffix}$/
-          @file_name = Thor::Util.snake_case(file_name) + suffix
-        end
-      end
-
-
       def use_prefix(prefix)
-        unless file_name =~ /#{prefix}$/
+        unless file_name =~ /^#{prefix}/
           @file_name = prefix + Thor::Util.snake_case(file_name)
         end
       end
-    end
+      
+      # Expose git config here, so we can stub it out for test environments
+      def git_config
+        @git_config  ||=  if Pathname.new("~/.gitconfig").expand_path.exist?
+                           Git.global_config
+                         else
+                           {}
+                         end
 
+      end
+      
+    end
   end
 end
