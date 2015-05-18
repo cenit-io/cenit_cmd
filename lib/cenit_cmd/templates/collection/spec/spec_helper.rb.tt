@@ -1,13 +1,31 @@
-# Run Coverage report
 require 'simplecov'
-SimpleCov.start do
-  add_group 'Libraries', 'lib'
+
+module SimpleCov::Configuration
+  def clean_filters
+    @filters = []
+  end
 end
 
+SimpleCov.configure do
+  clean_filters
+  load_adapter 'test_frameworks'
+end
 
-# Requires supporting ruby files with custom matchers and macros, etc,
-# in spec/support/ and its subdirectories.
-Dir[File.join(File.dirname(__FILE__), 'support/**/*.rb')].each { |f| require f }
+ENV["COVERAGE"] && SimpleCov.start do
+  add_filter "/.rvm/"
+end
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+
+require 'rspec'
+require 'hello-gem'
+
+require "cenit/collection/<%= collection_name %>/build"
+require 'cenit/client'
+
+# Requires supporting files with custom matchers and macros, etc,
+# in ./support/ and its subdirectories.
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require f}
 
 RSpec.configure do |config|
 
