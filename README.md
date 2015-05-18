@@ -10,7 +10,7 @@ Cenit is an open source social platform as a service for data and business integ
 
 ## Using cenit cmd
 
-    $ cenit collection foo
+    $ cenit collection foo --source=file.json
 
 
 By default its possible read the options from `./gitconfig`
@@ -41,6 +41,7 @@ Other options are:
 | --summary=[SUMMARY]                 | specify a summary (defaults 'Shared Collection cenit-collection-foo to be use in Cenit')           |
 | --description=[DESCRIPTION]         | specify a description (defaults 'Shared Collection cenit-collection-foo to be use in Cenit')       | 
 | --homepage=[HOMEPAGE]               | the homepage for your project (defaults to the GitHub repo)                                        |
+| --source=[PATH SOURCE JSON]         | the source json for your shared collection (defaults if black)                                        |
 
 ### Structure
 

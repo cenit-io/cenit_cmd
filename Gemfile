@@ -5,3 +5,5 @@ gem 'git'
 
 # Specify your gem's dependencies
 gemspec
+gem 'json'
+gem 'activesupport'
