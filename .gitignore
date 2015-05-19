@@ -43,6 +43,8 @@ bower.json
 
 
 ### Ruby template
+.idea/
+Gemfile.lock
 *.gem
 *.rbc
 /.config
