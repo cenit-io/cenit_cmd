@@ -62,10 +62,10 @@ module CenitCmd
       import_from_file
       
       
-      puts "cd ./#{file_name}"
-      `cd ./#{file_name}`
+      puts "cd #{file_name}"
+      Dir.chdir("#{file_name}")
       puts "bundle exec rake create_repo"
-      `rake bundle exec create_repo`
+      `bundle exec rake create_repo`
       puts "bundle exec rake version:write"
       `bundle exec rake version:write`
       puts "bundle exec rake git:release"
