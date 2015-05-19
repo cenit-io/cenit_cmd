@@ -7,13 +7,13 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = '<%= file_name %>'
   s.version     =  Cenit::Collection::<%= class_name %>::VERSION
-  s.summary     = '<%= summary %>'
-  s.description = '<%= description %>'
+  s.summary     = 'TODO: Add gem summary here'
+  s.description = 'TODO: Add (optional) gem description here'
   s.required_ruby_version = '>= 2.0.0'
 
-  s.author    = '<%= user_name %>'
-  s.email     = '<%= user_email %>'
-  s.homepage  = '<%= homepage %>'
+  s.author    = '<%= @user_name %>'
+  s.email     = '<%= @user_email %>'
+  s.homepage  = '<%= @homepage %>'
 
   s.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   s.bindir        = 'bin'

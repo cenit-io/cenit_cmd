@@ -20,6 +20,16 @@ class Jeweler::Generator
   end
 end
 
+class String
+  def to_bool
+    return true if self =~ (/(true|t|yes|y|1)$/i)
+    return false if self =~ (/(false|f|no|n|0)$/i)
+  return false
+  rescue
+    return false
+  end
+end
+
 module CenitCmd
   class Collection < Thor::Group
     include Thor::Actions
@@ -37,7 +47,7 @@ module CenitCmd
     class_option :homepage
     class_option :source
     class_option :git_remote
-    class_option :create_repo
+    class_option :create
     
     @generated = false
     def generate
@@ -53,7 +63,7 @@ module CenitCmd
       @homepage = options[:homepage] || "https://github.com/#{@github_username}/#{@file_name}"
       @source = options[:source]
       @git_remote = options[:git_remote] || "https://github.com/#{@github_username}/#{@file_name}.git"
-      @create_repo = options[:create_repo] || true
+      @create = options[:create].to_bool
       
       return unless validate_argument
 
@@ -80,8 +90,7 @@ module CenitCmd
       template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
       @load_data = false
       import_from_file if @source
-      @create = false
-      create_repo if @create_repo
+      create_repo if @create
       
       # puts "cd #{file_name}"
       # Dir.chdir("#{file_name}")
@@ -157,10 +166,14 @@ module CenitCmd
       end
 
       def import_from_file
-        unless @source.nil?
-          data = open_source
-          import_data(data) if data != {}
-          @load_data = true
+        begin
+          unless @source.nil?
+            data = open_source
+            import_data(data) if data != {}
+            @load_data = true
+          end
+        rescue
+          @load_data = false
         end
       end
 
@@ -232,9 +245,9 @@ module CenitCmd
             }
             g = Jeweler::Generator.new(options)
             g.create_git_and_github_repo
-            @create_repo = true
-          rescue @create_repo = false
-          end
+        rescue
+          puts "Not create repo into Github"
+        end
 
       end
 
@@ -300,10 +313,9 @@ module CenitCmd
       #   rescue Github::Error::UnprocessableEntity
       #     raise GitRepoCreationFailed, "Can't create that repo. Does it already exist?"
       #   end
-      #   # TODO do a HEAD request to see when it's ready?
       #   @repo.push('origin')
       # end
-      
+
     end
   end
 end
