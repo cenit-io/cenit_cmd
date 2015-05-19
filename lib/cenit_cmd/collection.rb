@@ -64,12 +64,12 @@ module CenitCmd
       
       puts "cd ./#{file_name}"
       `cd ./#{file_name}`
-      puts "rake create_repo"
-      `rake create_repo`
-      puts "rake version:write"
-      `rake version:write`
-      puts "rake git:release"
-      `rake git:release`
+      puts "bundle exec rake create_repo"
+      `rake bundle exec create_repo`
+      puts "bundle exec rake version:write"
+      `bundle exec rake version:write`
+      puts "bundle exec rake git:release"
+      `bundle exec rake git:release`
 
       @generated = true
     end
