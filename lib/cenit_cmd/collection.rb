@@ -1,9 +1,24 @@
 require 'byebug'
 require 'pathname'
-require 'git'
 require 'json'
 require 'fileutils'
 require 'active_support'
+# require 'git'
+# require 'github_api'
+# require 'highline/import'
+# require 'erb'
+
+require 'jeweler'
+
+class Jeweler::Generator
+  def create_git_and_github_repo
+    begin
+    create_version_control
+    create_and_push_repo
+    rescue (puts 'Error create repo en Gitgub')
+    end
+  end
+end
 
 module CenitCmd
   class Collection < Thor::Group
@@ -21,6 +36,8 @@ module CenitCmd
     class_option :description
     class_option :homepage
     class_option :source
+    class_option :git_remote
+    class_option :create_repo
     
     @generated = false
     def generate
@@ -35,6 +52,8 @@ module CenitCmd
       @description = options[:description] || @summary
       @homepage = options[:homepage] || "https://github.com/#{@github_username}/#{@file_name}"
       @source = options[:source]
+      @git_remote = options[:git_remote] || "https://github.com/#{@github_username}/#{@file_name}.git"
+      @create_repo = options[:create_repo] || true
       
       return unless validate_argument
 
@@ -51,6 +70,7 @@ module CenitCmd
       empty_directory "#{file_name}/spec/support"
       empty_directory "#{file_name}/spec/support/sample"
 
+      template 'collection.gemspec', "#{file_name}/#{file_name}.gemspec"
       template 'Gemfile', "#{file_name}/Gemfile"
       template 'gitignore', "#{file_name}/.gitignore"
       template 'LICENSE', "#{file_name}/LICENSE"
@@ -59,17 +79,18 @@ module CenitCmd
       template 'rspec', "#{file_name}/.rspec"
       template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
       @load_data = false
-      import_from_file
+      import_from_file if @source
+      @create = false
+      create_repo if @create_repo
       
-      
-      puts "cd #{file_name}"
-      Dir.chdir("#{file_name}")
-      puts "bundle exec rake create_repo"
-      `bundle exec rake create_repo`
-      puts "bundle exec rake version:write"
-      `bundle exec rake version:write`
-      puts "bundle exec rake git:release"
-      `bundle exec rake git:release`
+      # puts "cd #{file_name}"
+      # Dir.chdir("#{file_name}")
+      # puts "bundle exec rake create_repo"
+      # `bundle exec rake create_repo`
+      # puts "bundle exec rake version:write"
+      # `bundle exec rake version:write`
+      # puts "bundle exec rake git:release"
+      # `bundle exec rake git:release`
 
       @generated = true
     end
@@ -137,7 +158,8 @@ module CenitCmd
 
       def import_from_file
         unless @source.nil?
-          import_data(open_source)
+          data = open_source
+          import_data(data) if data != {}
           @load_data = true
         end
       end
@@ -193,6 +215,94 @@ module CenitCmd
         .gsub(/\s+/, '_')
         .downcase
       end
+
+      def create_repo
+        begin
+            options = {
+                project_name: @file_name,
+                target_dir: @file_name,
+                user_name: @user_name,
+                user_email: @user_email,
+                github_username: @github_username,
+                summary: @summary,
+                description: @description,
+                homepage: @homepage,
+                testing_framework: :rspec,
+                documentation_framework: :rdoc
+            }
+            g = Jeweler::Generator.new(options)
+            g.create_git_and_github_repo
+            @create_repo = true
+          rescue @create_repo = false
+          end
+
+      end
+
+      # def create_repo
+      #       options = {
+      #           project_name: @file_name,
+      #           target_dir: @file_name,
+      #           user_name: @user_name,
+      #           user_email: @user_email,
+      #           github_username: @github_username,
+      #           summary: @summary,
+      #           description: @description,
+      #           homepage: @homepage,
+      #           testing_framework: :rspec,
+      #           documentation_framework: :rdoc,
+      #           git_remote: @git_remote
+      #
+      #       }
+      #   create_version_control(options)
+      #   create_and_push_repo(options)
+      # end
+
+      # def create_version_control (options)
+      #   Dir.chdir(options[:target_dir]) do
+      #     begin
+      #       @repo = Git.init()
+      #     rescue Git::GitExecuteError => e
+      #       raise GitInitFailed, "Encountered an error during gitification. Maybe the repo already exists, or has already been pushed to?"
+      #     end
+      #
+      #     begin
+      #       @repo.add('.')
+      #     rescue Git::GitExecuteError => e
+      #       raise
+      #     end
+      #
+      #     begin
+      #       @repo.commit "Initial commit to #{options[:project_name]}."
+      #     rescue Git::GitExecuteError => e
+      #       raise
+      #     end
+      #
+      #     begin
+      #       @repo.add_remote('origin', options[:git_remote])
+      #     rescue Git::GitExecuteError => e
+      #       puts "Encountered an error while adding origin remote. Maybe you have some weird settings in ~/.gitconfig?"
+      #       raise
+      #     end
+      #   end
+      # end
+
+      # def create_and_push_repo (options)
+      #   puts "Please provide your Github user and password to create the Github repository"
+      #   begin
+      #     puts options[:github_username]
+      #     password = ask("Password: ") { |q| q.echo = false }
+      #     login = options[:github_username]
+      #     github = Github.new(:login => login.strip, :password => password.strip)
+      #     github.repos.create(:name => options[:pronject_name], :description => options[:summary], :testing_framework => :rspec, :documentation_framework => :rdoc)
+      #   rescue Github::Error::Unauthorized
+      #     puts "Wrong login/password! Please try again"
+      #     retry
+      #   rescue Github::Error::UnprocessableEntity
+      #     raise GitRepoCreationFailed, "Can't create that repo. Does it already exist?"
+      #   end
+      #   # TODO do a HEAD request to see when it's ready?
+      #   @repo.push('origin')
+      # end
       
     end
   end
