@@ -60,6 +60,9 @@ module CenitCmd
       template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
       @load_data = false
       import_from_file
+      
+      `cd #{file_name}`
+
       @generated = true
     end
 
