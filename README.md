@@ -4,9 +4,13 @@ This gem build a new Shared Collection (integration settgings) to be use in Ceni
 
 Cenit is an open source social platform as a service for data and business integration.
 
+## Installation
+
+    $ gem install cenit_cmd
+
 ## Using cenit cmd
 
-    $ cenit collection foo
+    $ cenit collection foo --source=file.json
 
 
 By default its possible read the options from `./gitconfig`
@@ -37,6 +41,7 @@ Other options are:
 | --summary=[SUMMARY]                 | specify a summary (defaults 'Shared Collection cenit-collection-foo to be use in Cenit')           |
 | --description=[DESCRIPTION]         | specify a description (defaults 'Shared Collection cenit-collection-foo to be use in Cenit')       | 
 | --homepage=[HOMEPAGE]               | the homepage for your project (defaults to the GitHub repo)                                        |
+| --source=[PATH SOURCE JSON]         | the source json for your shared collection (defaults if black)                                        |
 
 ### Structure
 
@@ -97,6 +102,15 @@ Tag and push release to git
 Shared your collection in https://rubygems.org
 
     $ rake release
+    
+## Contributing
+
+1. Fork it ( https://github.com/openjaf/cenit_cmd/fork )
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
+~                             
 
 ## About Cenit
 
