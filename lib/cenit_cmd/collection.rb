@@ -62,6 +62,9 @@ module CenitCmd
       import_from_file
       
       `cd #{file_name}`
+      `rake create_repo`
+      `rake version:write`
+      `rake git:release`
 
       @generated = true
     end
