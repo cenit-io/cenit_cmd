@@ -15,7 +15,8 @@ class Jeweler::Generator
     begin
     create_version_control
     create_and_push_repo
-    rescue (puts 'Error create repo en Gitgub')
+    rescue
+      puts 'Error create repo en Gitgub'
     end
   end
 end
