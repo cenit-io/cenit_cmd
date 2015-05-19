@@ -61,9 +61,14 @@ module CenitCmd
       @load_data = false
       import_from_file
       
-      `cd #{file_name}`
+      
+      puts "cd ./#{file_name}"
+      `cd ./#{file_name}`
+      puts "rake create_repo"
       `rake create_repo`
+      puts "rake version:write"
       `rake version:write`
+      puts "rake git:release"
       `rake git:release`
 
       @generated = true
