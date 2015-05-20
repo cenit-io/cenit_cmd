@@ -180,7 +180,7 @@ module CenitCmd
           library['schemas'].each do |schema|
             next unless schema_file = schema['uri']
             unless File.directory?("#{base_path}/libraries/#{schema_file}", mode: "w:utf-8") 
-              File.open"#{base_path}/libraries/#{library_file}") { |f| f.write(JSON.pretty_generate(JSON.parse(schema['schema']))) }
+              File.open("#{base_path}/libraries/#{library_file}") { |f| f.write(JSON.pretty_generate(JSON.parse(schema['schema']))) }
             end
           end
           library_index << {'name' => library_name, 'file' => library_file}
