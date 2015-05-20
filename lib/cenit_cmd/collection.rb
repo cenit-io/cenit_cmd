@@ -71,7 +71,7 @@ module CenitCmd
       empty_directory "#{file_name}/spec/support"
       empty_directory "#{file_name}/spec/support/sample"
 
-      template 'collection.gemspec', "#{file_name}/#{file_name}.gemspec"
+      #template 'collection.gemspec', "#{file_name}/#{file_name}.gemspec"
       template 'Gemfile', "#{file_name}/Gemfile"
       template 'gitignore', "#{file_name}/.gitignore"
       template 'LICENSE', "#{file_name}/LICENSE"
@@ -179,8 +179,8 @@ module CenitCmd
           FileUtils.mkpath("#{base_path}/libraries/#{library_file}") unless File.directory?("#{base_path}/libraries/#{library_file}")
           library['schemas'].each do |schema|
             next unless schema_file = schema['uri']
-            unless File.directory?("#{base_path}/libraries/#{schema_file}", mode: "w:utf-8") 
-              File.open("#{base_path}/libraries/#{library_file}") { |f| f.write(JSON.pretty_generate(JSON.parse(schema['schema']))) }
+            if File.directory?("#{base_path}/libraries/#{library_file}")
+              File.open("#{base_path}/libraries/#{library_file}/#{schema_file}") { |f| f.write(JSON.pretty_generate(JSON.parse(schema['schema']))) }
             end
           end
           library_index << {'name' => library_name, 'file' => library_file}
@@ -217,11 +217,14 @@ module CenitCmd
             }
             g = Jeweler::Generator.new(options)
             g.create_git_and_github_repo
-            jeweler = Jeweler.new
-            jeweler.write_version(0, 0, 1, 'a1')
-            jeweler.release_to_git(options)
-        rescue
-          puts "Not create repo into Github"
+
+            Dir.chdir(@file_name) do
+              system "rake version:write MAJOR=0 MINOR=1 PATCH=0"
+              system "rake release"
+            end
+
+        rescue Exception => e
+          puts e.message
         end
       end
     end

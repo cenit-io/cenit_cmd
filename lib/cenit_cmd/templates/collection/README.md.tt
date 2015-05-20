@@ -27,7 +27,7 @@ Or install it yourself as:
 ```
 % tree
 .
-├── cenit-collection-'<%= file_name %>'.gemspec
+├── cenit-collection-<%= file_name %>.gemspec
 ├── Gemfile
 ├── .gitignore
 ├── .rspec
@@ -37,7 +37,7 @@ Or install it yourself as:
 └── lib
     └── cenit
         └── collection
-            └── '<%= file_name %>'
+            └── <%= file_name %>
                  └── connections
                  └── webhooks
                  └── connection_sets
@@ -48,11 +48,11 @@ Or install it yourself as:
                  └── index.json
                  └── build.rb
                  └── version.rb
-            └── '<%= file_name %>'.rb
+            └── <%= file_name %>.rb
 └── spec
     └── cenit
         └── collection
-            └── '<%= file_name %>'_spec.rb
+            └── <%= file_name %>_spec.rb
     └── spec_helper.rb
     └── support
         └── samples
