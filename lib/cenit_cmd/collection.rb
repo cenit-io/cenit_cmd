@@ -3,11 +3,6 @@ require 'pathname'
 require 'json'
 require 'fileutils'
 require 'active_support'
-# require 'git'
-# require 'github_api'
-# require 'highline/import'
-# require 'erb'
-
 require 'jeweler'
 
 class Jeweler::Generator
@@ -23,11 +18,7 @@ end
 
 class String
   def to_bool
-    return true if self =~ (/(true|t|yes|y|1)$/i)
-    return false if self =~ (/(false|f|no|n|0)$/i)
-  return false
-  rescue
-    return false
+    self =~ (/(true|t|yes|y|1)$/i) rescue false
   end
 end
 
@@ -53,7 +44,6 @@ module CenitCmd
     @generated = false
     def generate
       @collection_name = @file_name
-      
       use_prefix 'cenit-collection-'
       
       @user_name = options[:user_name] || git_config['user.name']
@@ -92,16 +82,6 @@ module CenitCmd
       @load_data = false
       import_from_file if @source
       create_repo if @create
-      
-      # puts "cd #{file_name}"
-      # Dir.chdir("#{file_name}")
-      # puts "bundle exec rake create_repo"
-      # `bundle exec rake create_repo`
-      # puts "bundle exec rake version:write"
-      # `bundle exec rake version:write`
-      # puts "bundle exec rake git:release"
-      # `bundle exec rake git:release`
-
       @generated = true
     end
 
@@ -179,43 +159,34 @@ module CenitCmd
       end
 
       def import_data(data)
+        base_path = "#{@file_name}/lib/cenit/collection/#{@collection_name}"
         shared_data = JSON.parse(data)
         hash_data = shared_data['data']
         hash_model = []
-        models = ["flows","connection_roles","translators","events","connections","webhooks"]
+        models = %w(flows connection_roles translators events connections webhooks)
         models.collect do |model|
-          if hash_model = hash_data[model].to_a
-            hash_model.collect do |hash|
-              if file = filename_scape(hash['name'])
-                File.open(@file_name + '/lib/cenit/collection/' + @collection_name + '/' + model + '/' + file + '.json', mode: "w:utf-8") do |f|
-                  f.write(JSON.pretty_generate(hash))
-                end
-              end
-            end
+          next unless hash_model = hash_data[model].to_a
+          hash_model.collect do |hash|
+            next unless file = filename_scape(hash['name'])
+            File.open("#{base_path}/#{model}/#{file}.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(hash)) }
           end
         end
         libraries = hash_data['libraries']
         library_index = []
-        libraries.collect do |library|
-          if library_name = library['name']
-            library_file = filename_scape (library_name)
-            FileUtils.mkpath(@file_name + '/lib/cenit/collection/' + @collection_name + '/libraries/' + library_file) unless File.directory?(@file_name + '/lib/cenit/collection/' + @collection_name + '/libraries/' + library_file)
-            library['schemas'].collect do |schema|
-              if schema_file = schema['uri']
-                File.open(@file_name + '/lib/cenit/collection/' + @collection_name + '/' + '/libraries/' + library_file + '/' + schema_file, mode: "w:utf-8") do |f|
-                  f.write(JSON.pretty_generate(JSON.parse(schema['schema'])))
-                end
-              end
+        libraries.each do |library|
+          next unless library_name = library['name']
+          library_file = filename_scape (library_name)
+          FileUtils.mkpath("#{base_path}/libraries/#{library_file}") unless File.directory?("#{base_path}/libraries/#{library_file}")
+          library['schemas'].each do |schema|
+            next unless schema_file = schema['uri']
+            unless File.directory?("#{base_path}/libraries/#{schema_file}", mode: "w:utf-8") 
+              File.open"#{base_path}/libraries/#{library_file}") { |f| f.write(JSON.pretty_generate(JSON.parse(schema['schema']))) }
             end
-            library_index << {'name' => library_name, 'file' => library_file}
           end
+          library_index << {'name' => library_name, 'file' => library_file}
         end
-        File.open(@file_name + '/lib/cenit/collection/' + @collection_name + '/libraries/index.json', mode: "w:utf-8") do |f|
-          f.write(JSON.pretty_generate(library_index))
-        end
-        File.open(@file_name + '/lib/cenit/collection/' + @collection_name + '/index.json', mode: "w:utf-8") do |f|
-          f.write(JSON.pretty_generate(shared_data.except('data')))
-        end
+        File.open("#{base_path}/libraries/#{schema_file}/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(library_index)) }
+        File.open("#{base_path}/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(shared_data.except('data'))) }
       end
 
       def open_source
@@ -225,9 +196,9 @@ module CenitCmd
 
       def filename_scape(name)
         name.gsub(/[^\w\s_-]+/, '')
-        .gsub(/(^|\b\s)\s+($|\s?\b)/, '\\1\\2')
-        .gsub(/\s+/, '_')
-        .downcase
+          .gsub(/(^|\b\s)\s+($|\s?\b)/, '\\1\\2')
+          .gsub(/\s+/, '_')
+          .downcase
       end
 
       def create_repo
@@ -246,77 +217,12 @@ module CenitCmd
             }
             g = Jeweler::Generator.new(options)
             g.create_git_and_github_repo
+            g.bump_minor_version
+            g.release_to_git(options)
         rescue
           puts "Not create repo into Github"
         end
-
       end
-
-      # def create_repo
-      #       options = {
-      #           project_name: @file_name,
-      #           target_dir: @file_name,
-      #           user_name: @user_name,
-      #           user_email: @user_email,
-      #           github_username: @github_username,
-      #           summary: @summary,
-      #           description: @description,
-      #           homepage: @homepage,
-      #           testing_framework: :rspec,
-      #           documentation_framework: :rdoc,
-      #           git_remote: @git_remote
-      #
-      #       }
-      #   create_version_control(options)
-      #   create_and_push_repo(options)
-      # end
-
-      # def create_version_control (options)
-      #   Dir.chdir(options[:target_dir]) do
-      #     begin
-      #       @repo = Git.init()
-      #     rescue Git::GitExecuteError => e
-      #       raise GitInitFailed, "Encountered an error during gitification. Maybe the repo already exists, or has already been pushed to?"
-      #     end
-      #
-      #     begin
-      #       @repo.add('.')
-      #     rescue Git::GitExecuteError => e
-      #       raise
-      #     end
-      #
-      #     begin
-      #       @repo.commit "Initial commit to #{options[:project_name]}."
-      #     rescue Git::GitExecuteError => e
-      #       raise
-      #     end
-      #
-      #     begin
-      #       @repo.add_remote('origin', options[:git_remote])
-      #     rescue Git::GitExecuteError => e
-      #       puts "Encountered an error while adding origin remote. Maybe you have some weird settings in ~/.gitconfig?"
-      #       raise
-      #     end
-      #   end
-      # end
-
-      # def create_and_push_repo (options)
-      #   puts "Please provide your Github user and password to create the Github repository"
-      #   begin
-      #     puts options[:github_username]
-      #     password = ask("Password: ") { |q| q.echo = false }
-      #     login = options[:github_username]
-      #     github = Github.new(:login => login.strip, :password => password.strip)
-      #     github.repos.create(:name => options[:pronject_name], :description => options[:summary], :testing_framework => :rspec, :documentation_framework => :rdoc)
-      #   rescue Github::Error::Unauthorized
-      #     puts "Wrong login/password! Please try again"
-      #     retry
-      #   rescue Github::Error::UnprocessableEntity
-      #     raise GitRepoCreationFailed, "Can't create that repo. Does it already exist?"
-      #   end
-      #   @repo.push('origin')
-      # end
-
     end
   end
 end
