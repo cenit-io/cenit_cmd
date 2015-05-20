@@ -217,28 +217,13 @@ module CenitCmd
             }
             g = Jeweler::Generator.new(options)
             g.create_git_and_github_repo
-            write_version(0, 0, 1, 'a1')
-            release_to_git(options)
+            jeweler = Jeweler.new
+            jeweler.write_version(0, 0, 1, 'a1')
+            jeweler.release_to_git(options)
         rescue
           puts "Not create repo into Github"
         end
       end
-      
-      def write_version(major, minor, patch, build, options = {})
-        command = Jeweler::Commands::Version::Write.build_for(self)
-        command.major = major
-        command.minor = minor
-        command.patch = patch
-        command.build = build
-
-        command.run
-      end
-      
-      def release_to_git(args)
-        Jeweler::Commands::ReleaseToGit.build_for(self).run(args)
-      end
-        
-      
     end
   end
 end
