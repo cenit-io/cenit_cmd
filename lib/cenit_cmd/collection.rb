@@ -84,7 +84,7 @@ module CenitCmd
 
       @load_data = false
       import_from_file if @source
-      create_repo if @create_repo or @create_gem
+      create_repo if @create_repo || @create_gem
 
     end
 
@@ -176,19 +176,21 @@ module CenitCmd
         end
         libraries = hash_data['libraries']
         library_index = []
-        libraries.each do |library|
-          next unless library_name = library['name']
-          library_file = filename_scape (library_name)
-          FileUtils.mkpath("#{base_path}/libraries/#{library_file}") unless File.directory?("#{base_path}/libraries/#{library_file}")
-          library['schemas'].each do |schema|
-            next unless schema_file = schema['uri']
-            if File.directory?("#{base_path}/libraries/#{library_file}")
-              File.open("#{base_path}/libraries/#{library_file}/#{schema_file}") { |f| f.write(JSON.pretty_generate(JSON.parse(schema['schema']))) }
+        libraries.collect do |library|
+          if library_name = library['name']
+            library_file = filename_scape (library_name)
+            FileUtils.mkpath("#{base_path}/libraries/#{library_file}") unless File.directory?("#{base_path}/libraries/#{library_file}")
+            library['schemas'].collect do |schema|
+              if schema_file = schema['uri']
+                File.open("#{base_path}/libraries/#{library_file}/#{schema_file}", mode: "w:utf-8") do |f|
+                  f.write(JSON.pretty_generate(JSON.parse(schema['schema'])))
+                end
+              end
             end
+            library_index << {'name' => library_name, 'file' => library_file}
           end
-          library_index << {'name' => library_name, 'file' => library_file}
         end
-        File.open("#{base_path}/libraries/#{schema_file}/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(library_index)) }
+        File.open("#{base_path}/libraries/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(library_index)) }
         File.open("#{base_path}/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(shared_data.except('data'))) }
       end
 
