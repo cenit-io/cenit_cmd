@@ -6,3 +6,5 @@ gem 'rspec', :require => 'spec'
 gemspec
 gem 'json'
 gem 'activesupport'
+gem 'jeweler'
+gem 'github_api'

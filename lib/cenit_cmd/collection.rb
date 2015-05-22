@@ -39,7 +39,8 @@ module CenitCmd
     class_option :homepage
     class_option :source
     class_option :git_remote
-    class_option :create
+    class_option :create_repo
+    class_option :create_gem
     
     @generated = false
     def generate
@@ -54,7 +55,8 @@ module CenitCmd
       @homepage = options[:homepage] || "https://github.com/#{@github_username}/#{@file_name}"
       @source = options[:source]
       @git_remote = options[:git_remote] || "https://github.com/#{@github_username}/#{@file_name}.git"
-      @create = options[:create].to_bool
+      @create_repo = options[:create_repo].to_s.to_bool
+      @create_gem  = options[:create_gem].to_s.to_bool
       
       return unless validate_argument
 
@@ -71,7 +73,6 @@ module CenitCmd
       empty_directory "#{file_name}/spec/support"
       empty_directory "#{file_name}/spec/support/sample"
 
-      template 'collection.gemspec', "#{file_name}/#{file_name}.gemspec"
       template 'Gemfile', "#{file_name}/Gemfile"
       template 'gitignore', "#{file_name}/.gitignore"
       template 'LICENSE', "#{file_name}/LICENSE"
@@ -79,10 +80,12 @@ module CenitCmd
       template 'README.md', "#{file_name}/README.md"
       template 'rspec', "#{file_name}/.rspec"
       template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
+      @generated = true
+
       @load_data = false
       import_from_file if @source
-      create_repo if @create
-      @generated = true
+      create_repo if @create_repo || @create_gem
+
     end
 
     def final_banner
@@ -173,19 +176,21 @@ module CenitCmd
         end
         libraries = hash_data['libraries']
         library_index = []
-        libraries.each do |library|
-          next unless library_name = library['name']
-          library_file = filename_scape (library_name)
-          FileUtils.mkpath("#{base_path}/libraries/#{library_file}") unless File.directory?("#{base_path}/libraries/#{library_file}")
-          library['schemas'].each do |schema|
-            next unless schema_file = schema['uri']
-            unless File.directory?("#{base_path}/libraries/#{schema_file}", mode: "w:utf-8") 
-              File.open("#{base_path}/libraries/#{library_file}") { |f| f.write(JSON.pretty_generate(JSON.parse(schema['schema']))) }
+        libraries.collect do |library|
+          if library_name = library['name']
+            library_file = filename_scape (library_name)
+            FileUtils.mkpath("#{base_path}/libraries/#{library_file}") unless File.directory?("#{base_path}/libraries/#{library_file}")
+            library['schemas'].collect do |schema|
+              if schema_file = schema['uri']
+                File.open("#{base_path}/libraries/#{library_file}/#{schema_file}", mode: "w:utf-8") do |f|
+                  f.write(JSON.pretty_generate(JSON.parse(schema['schema'])))
+                end
+              end
             end
+            library_index << {'name' => library_name, 'file' => library_file}
           end
-          library_index << {'name' => library_name, 'file' => library_file}
         end
-        File.open("#{base_path}/libraries/#{schema_file}/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(library_index)) }
+        File.open("#{base_path}/libraries/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(library_index)) }
         File.open("#{base_path}/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(shared_data.except('data'))) }
       end
 
@@ -203,25 +208,14 @@ module CenitCmd
 
       def create_repo
         begin
-            options = {
-                project_name: @file_name,
-                target_dir: @file_name,
-                user_name: @user_name,
-                user_email: @user_email,
-                github_username: @github_username,
-                summary: @summary,
-                description: @description,
-                homepage: @homepage,
-                testing_framework: :rspec,
-                documentation_framework: :rdoc
-            }
-            g = Jeweler::Generator.new(options)
-            g.create_git_and_github_repo
-            jeweler = Jeweler.new
-            jeweler.write_version(0, 0, 1, 'a1')
-            jeweler.release_to_git(options)
-        rescue
-          puts "Not create repo into Github"
+            Dir.chdir(@file_name) do
+              system "rake create_repo"
+              system "rake version:write MAJOR=0 MINOR=1 PATCH=0"
+              system "rake git:release"
+              system "rake release" if @create_gem
+            end
+        rescue Exception => e
+          puts e.message
         end
       end
     end

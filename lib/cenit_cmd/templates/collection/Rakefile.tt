@@ -53,6 +53,34 @@ task :create_repo do
   g.create_git_and_github_repo
 end
 
+desc "push shared collection into CENIT-Hub"
+require File.expand_path(File.join(*%w[ lib cenit collection <%= collection_name -%>]), File.dirname(__FILE__))
+task :push do
+  push_api = 'http://localhost:3000/api/v1/push'
+  user_key = ask("User Key: ")
+  user_token = ask("User Token: ")
+  config = {:push_url=> push_api, :user_key=> user_key, :user_token=> user_token}
+  Cenit::Collection.push_collection(config)
+end
+
+desc "show shared collection"
+require File.expand_path(File.join(*%w[ lib cenit collection <%= collection_name -%>]), File.dirname(__FILE__))
+task :show do
+  puts Cenit::Collection.show_collection
+end
+
+desc "push sample data"
+require File.expand_path(File.join(*%w[ lib cenit collection <%= collection_name -%>]), File.dirname(__FILE__))
+task :push_sample do
+  push_api = 'http://localhost:3000/api/v1/push'
+  user_key = ask("User Key: ")
+  user_token = ask("User Token: ")
+  model = ask("Model name: ")
+
+  config = {:push_url=> push_api, :user_key=> user_key, :user_token=> user_token}
+  Cenit::Collection.sample_data(model, config)
+end
+
 require 'rspec/core'
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|

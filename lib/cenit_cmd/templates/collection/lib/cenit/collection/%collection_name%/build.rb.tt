@@ -1,4 +1,3 @@
-require 'cenit/collection/<%= collection_name %>/version'
 require 'cenit/collection/base/build'
 
 module Cenit

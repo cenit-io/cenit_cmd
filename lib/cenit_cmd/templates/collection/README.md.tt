@@ -27,7 +27,7 @@ Or install it yourself as:
 ```
 % tree
 .
-├── cenit-collection-'<%= file_name %>'.gemspec
+├── cenit-collection-<%= file_name %>.gemspec
 ├── Gemfile
 ├── .gitignore
 ├── .rspec
@@ -37,7 +37,7 @@ Or install it yourself as:
 └── lib
     └── cenit
         └── collection
-            └── '<%= file_name %>'
+            └── <%= file_name %>
                  └── connections
                  └── webhooks
                  └── connection_sets
@@ -48,11 +48,11 @@ Or install it yourself as:
                  └── index.json
                  └── build.rb
                  └── version.rb
-            └── '<%= file_name %>'.rb
+            └── <%= file_name %>.rb
 └── spec
     └── cenit
         └── collection
-            └── '<%= file_name %>'_spec.rb
+            └── <%= file_name %>_spec.rb
     └── spec_helper.rb
     └── support
         └── samples
@@ -75,24 +75,24 @@ config = {push_url: 'https://www.cenithub.com/api/v1/push',user_key: 'My User Ke
 Show Hash Collection
 
 ```ruby
-Cenit::Collection::<%= class_name %>.show_collection(config)
+Cenit::Collection.show_collection(config)
 ```
 
 Load Shared Collection into CenitHub
 
 ```ruby
-Cenit::Collection::<%= class_name %>.push_collection(config)
+Cenit::Collection.push_collection(config)
 ```
 
 Setup Shared Collection into CenitHub
 
 ```ruby
-Cenit::Collection::<%= class_name %>.pull_collection(config)
+Cenit::Collection.pull_collection(parameters,config)
 ```
 Push sample data into Cenithub
 
 ```ruby
-Cenit::Collection::<%= class_name %>.push_sample(config)
+Cenit::Collection.push_sample([model_name],config)
 ```
 ## Hello, rake tasks
 
