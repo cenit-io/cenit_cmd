@@ -1,13 +1,7 @@
 module Cenit
   module Collection
-    require "cenit/collection/<%= collection_name %>/build"
+    require File.expand_path(File.join(*%w[ <%= collection_name %> build ]), File.dirname(__FILE__))
     require "cenit/client"
-
-    # bundle exec irb -I lib -r 'cenit/collection/<%= collection_name %>'
-    # config = {:push_url => "https://www.cenithub.com/api/v1/push", :connection_token => "My Conn Token", :connection_key => "My Conn Key"}
-    # config = {:push_url => "https://www.cenithub.com/api/v1/push", :user_token => "My User Token", :user_key => "My User Key"}
-    # Cenit::Collection::<%= class_name %>.push_collection config
-    # Cenit::Collection::<%= class_name %>.shared_collection
 
     @<%= collection_name %> = Cenit::Collection::<%= class_name %>::Build.new
 
@@ -29,7 +23,7 @@ module Cenit
     end
 
     def self.push_sample(model, config)
-      Cenit::Client.push(@<%= collection_name %>.sample_data(model).to_json, config)
+      Cenit::Client.push(@<%= collection_name %>.sample_model(model).to_json, config)
     end
   end
 end

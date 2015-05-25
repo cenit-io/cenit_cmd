@@ -10,8 +10,7 @@ Cenit is an open source social platform as a service for data and business integ
 
 ## Using cenit cmd
 
-    $ cenit collection foo
-
+    $ cenit collection foo --source=file.json
 
 By default its possible read the options from `./gitconfig`
 
@@ -29,7 +28,7 @@ email for git and your username and token for GitHub:
 
 If you prefer use explicit options then you can do
 
-    $ cenit collection foo --user-email=sanchojaf@gmail.com --github-username=sanchojaf 
+    $ cenit collection foo --source=file.json --user-email=sanchojaf@gmail.com --github-username=sanchojaf 
 
 Other options are:
 
@@ -41,6 +40,7 @@ Other options are:
 | --summary=[SUMMARY]                 | specify a summary (defaults 'Shared Collection cenit-collection-foo to be use in Cenit')           |
 | --description=[DESCRIPTION]         | specify a description (defaults 'Shared Collection cenit-collection-foo to be use in Cenit')       | 
 | --homepage=[HOMEPAGE]               | the homepage for your project (defaults to the GitHub repo)                                        |
+| --source=[PATH SOURCE JSON]         | the json source for your shared collection                                                         |
 
 ### Structure
 

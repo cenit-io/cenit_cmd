@@ -1,6 +1,26 @@
 require 'byebug'
 require 'pathname'
-require 'git'
+require 'json'
+require 'fileutils'
+require 'active_support'
+require 'jeweler'
+
+class Jeweler::Generator
+  def create_git_and_github_repo
+    begin
+    create_version_control
+    create_and_push_repo
+    rescue
+      puts 'Error create repo en Gitgub'
+    end
+  end
+end
+
+class String
+  def to_bool
+    self =~ (/(true|t|yes|y|1)$/i) rescue false
+  end
+end
 
 module CenitCmd
   class Collection < Thor::Group
@@ -17,11 +37,14 @@ module CenitCmd
     class_option :summary
     class_option :description
     class_option :homepage
+    class_option :source
+    class_option :git_remote
+    class_option :create_repo
+    class_option :create_gem
     
     @generated = false
     def generate
       @collection_name = @file_name
-      
       use_prefix 'cenit-collection-'
       
       @user_name = options[:user_name] || git_config['user.name']
@@ -30,6 +53,10 @@ module CenitCmd
       @summary = options[:summary] || "Shared Collection #{@file_name} to be use in Cenit"
       @description = options[:description] || @summary
       @homepage = options[:homepage] || "https://github.com/#{@github_username}/#{@file_name}"
+      @source = options[:source]
+      @git_remote = options[:git_remote] || "https://github.com/#{@github_username}/#{@file_name}.git"
+      @create_repo = options[:create_repo].to_s.to_bool
+      @create_gem  = options[:create_gem].to_s.to_bool
       
       return unless validate_argument
 
@@ -54,6 +81,11 @@ module CenitCmd
       template 'rspec', "#{file_name}/.rspec"
       template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
       @generated = true
+
+      @load_data = false
+      import_from_file if @source
+      create_repo if @create_repo || @create_gem
+
     end
 
     def final_banner
@@ -116,7 +148,76 @@ module CenitCmd
         end
         true
       end
-      
+
+      def import_from_file
+        begin
+          unless @source.nil?
+            data = open_source
+            import_data(data) if data != {}
+            @load_data = true
+          end
+        rescue
+          @load_data = false
+        end
+      end
+
+      def import_data(data)
+        base_path = "#{@file_name}/lib/cenit/collection/#{@collection_name}"
+        shared_data = JSON.parse(data)
+        hash_data = shared_data['data']
+        hash_model = []
+        models = %w(flows connection_roles translators events connections webhooks)
+        models.collect do |model|
+          next unless hash_model = hash_data[model].to_a
+          hash_model.collect do |hash|
+            next unless file = filename_scape(hash['name'])
+            File.open("#{base_path}/#{model}/#{file}.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(hash)) }
+          end
+        end
+        libraries = hash_data['libraries']
+        library_index = []
+        libraries.collect do |library|
+          if library_name = library['name']
+            library_file = filename_scape (library_name)
+            FileUtils.mkpath("#{base_path}/libraries/#{library_file}") unless File.directory?("#{base_path}/libraries/#{library_file}")
+            library['schemas'].collect do |schema|
+              if schema_file = schema['uri']
+                File.open("#{base_path}/libraries/#{library_file}/#{schema_file}", mode: "w:utf-8") do |f|
+                  f.write(JSON.pretty_generate(JSON.parse(schema['schema'])))
+                end
+              end
+            end
+            library_index << {'name' => library_name, 'file' => library_file}
+          end
+        end
+        File.open("#{base_path}/libraries/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(library_index)) }
+        File.open("#{base_path}/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(shared_data.except('data'))) }
+      end
+
+      def open_source
+        File.open(@source, mode: "r:utf-8").read
+      rescue {}
+      end
+
+      def filename_scape(name)
+        name.gsub(/[^\w\s_-]+/, '')
+          .gsub(/(^|\b\s)\s+($|\s?\b)/, '\\1\\2')
+          .gsub(/\s+/, '_')
+          .downcase
+      end
+
+      def create_repo
+        begin
+            Dir.chdir(@file_name) do
+              system "rake create_repo"
+              system "rake version:write MAJOR=0 MINOR=1 PATCH=0"
+              system "rake git:release"
+              system "rake release" if @create_gem
+            end
+        rescue Exception => e
+          puts e.message
+        end
+      end
     end
   end
 end
