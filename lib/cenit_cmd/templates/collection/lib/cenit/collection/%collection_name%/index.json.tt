@@ -1,7 +1,0 @@
-{
-    "name": "<%= class_name %> Collection",
-    "description": "<%= class_name %> Collection package for install integration in CenitHub",
-    "category": "Collection",
-    "data": {"name": "<%= class_name %> Collection"},
-    "pull_parameters": []
-}

@@ -4,12 +4,14 @@ require 'json'
 require 'fileutils'
 require 'active_support'
 require 'jeweler'
+require 'cenit_cmd/virtual_file'
+require 'cenit_cmd/package'
 
 class Jeweler::Generator
   def create_git_and_github_repo
     begin
-    create_version_control
-    create_and_push_repo
+      create_version_control
+      create_and_push_repo
     rescue
       puts 'Error create repo en Gitgub'
     end
@@ -41,49 +43,53 @@ module CenitCmd
     class_option :git_remote
     class_option :create_repo
     class_option :create_gem
-    
+
     @generated = false
+
+    attr_reader :file_creator
+
     def generate
       @collection_name = @file_name
       use_prefix 'cenit-collection-'
-      
-      @user_name = options[:user_name] || git_config['user.name']
-      @user_email = options[:user_email] || git_config['user.email']
+
+      @user_name ||= options[:user_name] || git_config['user.name']
+      @user_email ||= options[:user_email] || git_config['user.email']
       @github_username = options[:github_username] || git_config['github.user']
-      @summary = options[:summary] || "Shared Collection #{@file_name} to be use in Cenit"
-      @description = options[:description] || @summary
-      @homepage = options[:homepage] || "https://github.com/#{@github_username}/#{@file_name}"
-      @source = options[:source]
+      @summary ||= options[:summary] || "Shared Collection #{@file_name} to be used with Cenit"
+      @description ||= options[:description] || @summary
+      @homepage ||= options[:homepage] || "https://github.com/#{@github_username}/#{@file_name}"
+      @source ||= options[:source]
       @git_remote = options[:git_remote] || "https://github.com/#{@github_username}/#{@file_name}.git"
       @create_repo = options[:create_repo].to_s.to_bool
-      @create_gem  = options[:create_gem].to_s.to_bool
-      
+      @create_gem = options[:create_gem].to_s.to_bool
+
       return unless validate_argument
 
-      empty_directory file_name
-      
-      directory 'lib', "#{file_name}/lib"
-      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/connections"
-      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/webhooks"
-      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/connection_roles"
-      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/events"
-      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/flows"
-      empty_directory  "#{file_name}/lib/cenit/collection/#{collection_name}/translators"
+      empty_directory file_name, skip_path_adjust: true
 
-      empty_directory "#{file_name}/spec/support"
-      empty_directory "#{file_name}/spec/support/sample"
+      directory 'lib', 'lib'
+      empty_directory "lib/cenit/collection/#{collection_name}/connections"
+      empty_directory "lib/cenit/collection/#{collection_name}/webhooks"
+      empty_directory "lib/cenit/collection/#{collection_name}/connection_roles"
+      empty_directory "lib/cenit/collection/#{collection_name}/events"
+      empty_directory "lib/cenit/collection/#{collection_name}/flows"
+      empty_directory "lib/cenit/collection/#{collection_name}/translators"
 
-      template 'Gemfile', "#{file_name}/Gemfile"
-      template 'gitignore', "#{file_name}/.gitignore"
-      template 'LICENSE', "#{file_name}/LICENSE"
-      template 'Rakefile', "#{file_name}/Rakefile"
-      template 'README.md', "#{file_name}/README.md"
-      template 'rspec', "#{file_name}/.rspec"
-      template 'spec/spec_helper.rb.tt', "#{file_name}/spec/spec_helper.rb"
+      empty_directory "spec/support"
+      empty_directory "spec/support/sample"
+
+      template 'Gemfile', "Gemfile"
+      template 'gitignore', ".gitignore"
+      template 'LICENSE', "LICENSE"
+      template 'Rakefile', "Rakefile"
+      template 'README.md', "README.md"
+      template 'rspec', ".rspec"
+      template 'spec/spec_helper.rb.tt', "spec/spec_helper.rb"
+
       @generated = true
 
       @load_data = false
-      import_from_file if @source
+      import_data if @source
       create_repo if @create_repo || @create_gem
 
     end
@@ -91,7 +97,7 @@ module CenitCmd
     def final_banner
       return unless @generated
       say %Q{
-        #{'*' * 80}
+          #{'*' * 80}
         
         Consider the next steps:
         
@@ -116,10 +122,67 @@ module CenitCmd
         Visit README.md for more details.
 
         #{'*' * 80}
-      }
+          }
     end
 
     no_tasks do
+
+      def build_gem(data)
+
+        virtual_files = []
+
+        %w(name user_name user_email summary description homepage).each { |option| instance_variable_set(:"@#{option}", data[option]) }
+        @file_name = filename_scape(data['name'])
+        @source = data
+        @arguments_required = false
+        @file_creator = ->(file_name, content) { virtual_files << CenitCmd::VirtualFile.new(file_name, content) }
+
+        generate
+
+        spec = Gem::Specification.new do |s|
+          s.name = file_name
+          s.version = data['shared_version']
+          s.date = Time.now
+          s.summary = @summary
+          s.description = @description
+          s.authors = [@user_name]
+          s.email = @user_email
+          s.virtual_files = virtual_files
+          s.homepage = @homepage
+        end
+
+        [spec.file_name, Package.virtual_build(spec)]
+      end
+
+      def empty_directory(destination, config = {})
+        unless @file_creator
+          destination = adjust_path_args(destination) unless config[:skip_path_adjust]
+          super
+        end
+      end
+
+      def adjust_path_args(args)
+        args = [args] unless args.is_a?(Array)
+        args[0] = "#{file_name}/#{args[0]}" unless args.empty? || @file_creator
+        args[0]
+      end
+
+      class CreateFile < Thor::Actions::CreateFile
+        def invoke!
+          if file_creator = base.file_creator
+            file_creator.call(given_destination, render)
+          else
+            super
+          end
+        end
+      end
+
+      def create_file(destination, *args, &block)
+        config = args.last.is_a?(Hash) ? args.pop : {}
+        data = args.first
+        action CreateFile.new(self, adjust_path_args(destination), block || data.to_s, config)
+      end
+
       def class_name
         Thor::Util.camel_case @collection_name
       end
@@ -129,10 +192,9 @@ module CenitCmd
           @file_name = prefix + Thor::Util.snake_case(file_name)
         end
       end
-      
-      # Expose git config here, so we can stub it out for test environments
+
       def git_config
-        @git_config  ||=  Pathname.new("~/.gitconfig").expand_path.exist? ? Git.global_config : {}
+        @git_config ||= Pathname.new("~/.gitconfig").expand_path.exist? ? Git.global_config : {}
       end
 
       def validate_argument
@@ -145,75 +207,120 @@ module CenitCmd
         elsif @github_username.nil?
           $stderr.puts %Q{Please specify --github-username or set github.user in ~/.gitconfig (see http://github.com/blog/180-local-github-config for details). For example: git config --global github.user defunkt}
           return false
-        end
+        end if @arguments_required
         true
       end
 
-      def import_from_file
+      def import_data
         begin
           unless @source.nil?
-            data = open_source
-            import_data(data) if data != {}
+            if data = @source.is_a?(Hash) ? @source : open_source
+              deploy_data(data)
+            end
             @load_data = true
           end
-        rescue
+        rescue Exception => ex
+          say "ERROR: #{ex.message}"
           @load_data = false
         end
       end
 
-      def import_data(data)
-        base_path = "#{@file_name}/lib/cenit/collection/#{@collection_name}"
-        shared_data = JSON.parse(data)
+      def deploy_data(data, file_creator = nil)
+        file_creator ||= @file_creator || ->(destination, content) { create_file(destination, content) }
+        base_path = "lib/cenit/collection/#{collection_name}"
+        shared_data = data.is_a?(Hash) ? data : JSON.parse(data)
         hash_data = shared_data['data']
-        hash_model = []
-        models = %w(flows connection_roles translators events connections webhooks)
-        models.collect do |model|
+        %w(flows connection_roles translators events connections webhooks).each do |model|
           next unless hash_model = hash_data[model].to_a
-          hash_model.collect do |hash|
-            next unless file = filename_scape(hash['name'])
-            File.open("#{base_path}/#{model}/#{file}.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(hash)) }
+          set = Set.new
+          hash_model.each do |hash|
+            next unless file = default = filename_scape(hash['name'])
+            i = 0
+            while set.include?(file)
+              file = "#{default}_#{i += 1}"
+            end
+            if (model == 'translators') && transformation = hash.delete('transformation')
+              file_creator.call("#{base_path}/#{model}/#{file}#{transformation_ext(hash['style'])}", transformation)
+            end
+            file_creator.call("#{base_path}/#{model}/#{file}.json", JSON.pretty_generate(hash))
           end
         end
         libraries = hash_data['libraries']
         library_index = []
-        libraries.collect do |library|
+        set = Set.new
+        libraries.each do |library|
           if library_name = library['name']
-            library_file = filename_scape (library_name)
-            FileUtils.mkpath("#{base_path}/libraries/#{library_file}") unless File.directory?("#{base_path}/libraries/#{library_file}")
-            library['schemas'].collect do |schema|
-              if schema_file = schema['uri']
-                File.open("#{base_path}/libraries/#{library_file}/#{schema_file}", mode: "w:utf-8") do |f|
-                  f.write(JSON.pretty_generate(JSON.parse(schema['schema'])))
+            host_dirs = {}
+            library_file = default = filename_scape(library_name)
+            i = 0
+            while set.include?(library_file)
+              library_file = "#{default}_#{i += 1}"
+            end
+            library['schemas'].each do |schema|
+              if uri = schema['uri']
+                uri = URI.parse(uri)
+                host_dir = nil
+                if (host = uri.host) && !(host_dir = host_dirs.keys.detect { |dir| host_dirs[dir] == host })
+                  host_dir = default = filename_scape(host)
+                  i = 0
+                  while host_dirs[host_dir]
+                    host_dir = "#{default}_#{i += 1}"
+                  end
+                  host_dirs[host_dir] = host
                 end
+                schema_file = uri.path
+                schema_file = schema_file.from(1) if schema_file.start_with?('/')
+                schema_file = "#{host_dir}/#{schema_file}" if host_dir
+                schema =
+                  begin
+                    JSON.pretty_generate(JSON.parse(schema['schema']))
+                  rescue
+                    Nokogiri::XML(schema['schema']).to_xml rescue nil
+                  end
+                file_creator.call("#{base_path}/libraries/#{library_file}/#{schema_file}", schema)
               end
             end
-            library_index << {'name' => library_name, 'file' => library_file}
+            library_index << {name: library_name, file: library_file, hosts: host_dirs}
           end
         end
-        File.open("#{base_path}/libraries/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(library_index)) }
-        File.open("#{base_path}/index.json", mode: "w:utf-8") { |f| f.write(JSON.pretty_generate(shared_data.except('data'))) }
+        file_creator.call("#{base_path}/libraries/index.json", JSON.pretty_generate(library_index))
+        file_creator.call("#{base_path}/index.json", JSON.pretty_generate(shared_data.except('data')))
+      end
+
+      def transformation_ext(style)
+        case style
+        when 'ruby'
+          '.rb'
+        when 'liquid'
+          '.liquid'
+        when 'xslt'
+          '.xslt'
+        else
+          ''
+        end
       end
 
       def open_source
         File.open(@source, mode: "r:utf-8").read
-      rescue {}
+      rescue
+        nil
       end
 
       def filename_scape(name)
         name.gsub(/[^\w\s_-]+/, '')
-          .gsub(/(^|\b\s)\s+($|\s?\b)/, '\\1\\2')
-          .gsub(/\s+/, '_')
-          .downcase
+        .gsub(/(^|\b\s)\s+($|\s?\b)/, '\\1\\2')
+        .gsub(/\s+/, '_')
+        .downcase
       end
 
       def create_repo
         begin
-            Dir.chdir(@file_name) do
-              system "rake create_repo"
-              system "rake version:write MAJOR=0 MINOR=1 PATCH=0"
-              system "rake git:release"
-              system "rake release" if @create_gem
-            end
+          Dir.chdir(@file_name) do
+            system 'rake create_repo'
+            system 'rake version:write MAJOR=0 MINOR=1 PATCH=0'
+            system 'rake git:release'
+            system 'rake release' if @create_gem
+          end
         rescue Exception => e
           puts e.message
         end
