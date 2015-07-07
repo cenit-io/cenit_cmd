@@ -5,6 +5,7 @@ module Cenit
 
     @<%= collection_name %> = Cenit::Collection::<%= class_name %>::Build.new
 
+<%= dependencies.inject('') { |cmd, d| cmd += "    require 'cenit/collection/#{d['name']}/build'\r\n    @#{collection_name}.register_dep(Cenit::Collection::#{d['name'].camelize}::Build.new)\r\n" } %>
     # Include Collection Gem dependency
     # require "cenit/collection/[My Dependency Collection]/build"
     # Collection dependency

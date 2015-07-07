@@ -33,6 +33,8 @@ module CenitCmd
     argument :collection_name, type: :string, desc: 'collection name', default: '.'
     source_root File.expand_path('../templates/collection', __FILE__)
 
+    attr_reader :dependencies
+
     class_option :user_name
     class_option :user_email
     class_option :github_username
@@ -50,7 +52,7 @@ module CenitCmd
 
     def generate
       @collection_name = @file_name
-      use_prefix 'cenit-collection-'
+      use_prefix
 
       @user_name ||= options[:user_name] || git_config['user.name']
       @user_email ||= options[:user_email] || git_config['user.email']
@@ -67,6 +69,10 @@ module CenitCmd
 
       empty_directory file_name, skip_path_adjust: true
 
+      @load_data = false
+      import_data if @source
+      @dependencies ||= []
+
       directory 'lib', 'lib'
       empty_directory "lib/cenit/collection/#{collection_name}/connections"
       empty_directory "lib/cenit/collection/#{collection_name}/webhooks"
@@ -78,20 +84,17 @@ module CenitCmd
       empty_directory "spec/support"
       empty_directory "spec/support/sample"
 
-      template 'Gemfile', "Gemfile"
-      template 'gitignore', ".gitignore"
-      template 'LICENSE', "LICENSE"
-      template 'Rakefile', "Rakefile"
-      template 'README.md', "README.md"
-      template 'rspec', ".rspec"
-      template 'spec/spec_helper.rb.tt', "spec/spec_helper.rb"
+      template 'Gemfile', 'Gemfile'
+      template 'gitignore', '.gitignore'
+      template 'LICENSE', 'LICENSE'
+      template 'Rakefile', 'Rakefile'
+      template 'README.md', 'README.md'
+      template 'rspec', '.rspec'
+      template 'spec/spec_helper.rb.tt', 'spec/spec_helper.rb'
 
       @generated = true
 
-      @load_data = false
-      import_data if @source
       create_repo if @create_repo || @create_gem
-
     end
 
     def final_banner
@@ -106,19 +109,19 @@ module CenitCmd
         
         Create a new git and related GitHub's repository
         $ rake create_repo
-        
+
         Commit and push until you are happy with your changes
         ...
-        
+
         Generate a version
         $ rake version:write
-        
+
         Tag and push release to git
         $ rake git:release
-        
+
         Shared your collection in https://rubygems.org
         $ rake release
-        
+
         Visit README.md for more details.
 
         #{'*' * 80}
@@ -131,7 +134,7 @@ module CenitCmd
 
         virtual_files = []
 
-        %w(name user_name user_email summary description homepage).each { |option| instance_variable_set(:"@#{option}", data[option]) }
+        %w(name summary description homepage).each { |option| instance_variable_set(:"@#{option}", data[option]) }
         @file_name = filename_scape(data['name'])
         @source = data
         @arguments_required = false
@@ -145,9 +148,9 @@ module CenitCmd
           s.date = Time.now
           s.summary = @summary
           s.description = @description
-          s.authors = [@user_name]
-          s.email = @user_email
-          s.virtual_files = virtual_files
+          s.authors = data['authors'].collect { |author| author['name'] },
+            s.email = data['authors'].collect { |author| author['email'] },
+            s.virtual_files = virtual_files
           s.homepage = @homepage
         end
 
@@ -187,10 +190,13 @@ module CenitCmd
         Thor::Util.camel_case @collection_name
       end
 
-      def use_prefix(prefix)
-        unless file_name =~ /^#{prefix}/
-          @file_name = prefix + Thor::Util.snake_case(file_name)
-        end
+      def use_prefix(prefix = nil)
+        @file_name = do_prefix(@file_name)
+      end
+
+      def do_prefix(name, prefix = nil)
+        prefix ||= 'cenit-collection-'
+        name =~ /^#{prefix}/ ? name : prefix + Thor::Util.snake_case(name)
       end
 
       def git_config
@@ -215,6 +221,13 @@ module CenitCmd
         begin
           unless @source.nil?
             if data = @source.is_a?(Hash) ? @source : open_source
+              @dependencies = data['dependencies'].collect do |d|
+                {
+                  'name' => d['name'],
+                  'gem_name' => do_prefix(d['name']),
+                  'shared_version' => d['shared_version']
+                }
+              end || []
               deploy_data(data)
             end
             @load_data = true
