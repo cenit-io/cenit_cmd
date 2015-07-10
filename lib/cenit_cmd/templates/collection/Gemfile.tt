@@ -5,7 +5,7 @@ source 'http://s3.amazonaws.com/production.s3.rubygems.org/'
 gem 'cenit-collection-base'
 gem 'cenit-client'
 gem 'activesupport'
-
+<%= dependencies.inject('') { |cmd, d| cmd += "gem '#{d['gem_name']}', '~> #{d['shared_version']}'\r\n" } %>
 # Include Cenit Collection Gem dependency
 # gem 'cenit-collection-[My Dependency]'
 
