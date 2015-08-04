@@ -80,6 +80,7 @@ module CenitCmd
       empty_directory "lib/cenit/collection/#{collection_name}/events"
       empty_directory "lib/cenit/collection/#{collection_name}/flows"
       empty_directory "lib/cenit/collection/#{collection_name}/translators"
+      empty_directory "lib/cenit/collection/#{collection_name}/algorithms"
 
       empty_directory "spec/support"
       empty_directory "spec/support/sample"
@@ -221,13 +222,18 @@ module CenitCmd
         begin
           unless @source.nil?
             if data = @source.is_a?(Hash) ? @source : open_source
-              @dependencies = data['dependencies'].collect do |d|
-                {
-                  'name' => d['name'],
-                  'gem_name' => do_prefix(d['name']),
-                  'shared_version' => d['shared_version']
-                }
-              end || []
+              @dependencies =
+                if dependencies = data['dependencies']
+                  dependencies.collect do |d|
+                    {
+                      'name' => d['name'],
+                      'gem_name' => do_prefix(d['name']),
+                      'shared_version' => d['shared_version']
+                    }
+                  end
+                else
+                  []
+                end
               deploy_data(data)
             end
             @load_data = true
@@ -243,7 +249,7 @@ module CenitCmd
         base_path = "lib/cenit/collection/#{collection_name}"
         shared_data = data.is_a?(Hash) ? data : JSON.parse(data)
         hash_data = shared_data['data']
-        %w(flows connection_roles translators events connections webhooks).each do |model|
+        %w(flows connection_roles translators events connections webhooks algorithms).each do |model|
           next unless hash_model = hash_data[model].to_a
           set = Set.new
           hash_model.each do |hash|
@@ -254,49 +260,52 @@ module CenitCmd
             end
             if (model == 'translators') && transformation = hash.delete('transformation')
               file_creator.call("#{base_path}/#{model}/#{file}#{transformation_ext(hash['style'])}", transformation)
+            elsif model == 'algorithms'
+              file_creator.call("#{base_path}/#{model}/#{file}.rb", hash.delete('code'))
             end
             file_creator.call("#{base_path}/#{model}/#{file}.json", JSON.pretty_generate(hash))
           end
         end
-        libraries = hash_data['libraries']
-        library_index = []
-        set = Set.new
-        libraries.each do |library|
-          if library_name = library['name']
-            host_dirs = {}
-            library_file = default = filename_scape(library_name)
-            i = 0
-            while set.include?(library_file)
-              library_file = "#{default}_#{i += 1}"
-            end
-            library['schemas'].each do |schema|
-              if uri = schema['uri']
-                uri = URI.parse(uri)
-                host_dir = nil
-                if (host = uri.host) && !(host_dir = host_dirs.keys.detect { |dir| host_dirs[dir] == host })
-                  host_dir = default = filename_scape(host)
-                  i = 0
-                  while host_dirs[host_dir]
-                    host_dir = "#{default}_#{i += 1}"
-                  end
-                  host_dirs[host_dir] = host
-                end
-                schema_file = uri.path
-                schema_file = schema_file.from(1) if schema_file.start_with?('/')
-                schema_file = "#{host_dir}/#{schema_file}" if host_dir
-                schema =
-                  begin
-                    JSON.pretty_generate(JSON.parse(schema['schema']))
-                  rescue
-                    Nokogiri::XML(schema['schema']).to_xml rescue nil
-                  end
-                file_creator.call("#{base_path}/libraries/#{library_file}/#{schema_file}", schema)
+        if libraries = hash_data['libraries']
+          library_index = []
+          set = Set.new
+          libraries.each do |library|
+            if library_name = library['name']
+              host_dirs = {}
+              library_file = default = filename_scape(library_name)
+              i = 0
+              while set.include?(library_file)
+                library_file = "#{default}_#{i += 1}"
               end
+              library['schemas'].each do |schema|
+                if uri = schema['uri']
+                  uri = URI.parse(uri)
+                  host_dir = nil
+                  if (host = uri.host) && !(host_dir = host_dirs.keys.detect { |dir| host_dirs[dir] == host })
+                    host_dir = default = filename_scape(host)
+                    i = 0
+                    while host_dirs[host_dir]
+                      host_dir = "#{default}_#{i += 1}"
+                    end
+                    host_dirs[host_dir] = host
+                  end
+                  schema_file = uri.path
+                  schema_file = schema_file.from(1) if schema_file.start_with?('/')
+                  schema_file = "#{host_dir}/#{schema_file}" if host_dir
+                  schema =
+                    begin
+                      JSON.pretty_generate(JSON.parse(schema['schema']))
+                    rescue
+                      Nokogiri::XML(schema['schema']).to_xml rescue nil
+                    end
+                  file_creator.call("#{base_path}/libraries/#{library_file}/#{schema_file}", schema)
+                end
+              end
+              library_index << {name: library_name, file: library_file, hosts: host_dirs}
             end
-            library_index << {name: library_name, file: library_file, hosts: host_dirs}
           end
+          file_creator.call("#{base_path}/libraries/index.json", JSON.pretty_generate(library_index))
         end
-        file_creator.call("#{base_path}/libraries/index.json", JSON.pretty_generate(library_index))
         file_creator.call("#{base_path}/index.json", JSON.pretty_generate(shared_data.except('data')))
       end
 
