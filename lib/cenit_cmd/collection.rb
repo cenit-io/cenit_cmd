@@ -249,7 +249,7 @@ module CenitCmd
         base_path = "lib/cenit/collection/#{collection_name}"
         shared_data = data.is_a?(Hash) ? data : JSON.parse(data)
         hash_data = shared_data['data']
-        %w(flows connection_roles translators events connections webhooks algorithms).each do |model|
+        %w(flows connection_roles translators events connections webhooks).each do |model|
           next unless hash_model = hash_data[model].to_a
           set = Set.new
           hash_model.each do |hash|
@@ -260,11 +260,25 @@ module CenitCmd
             end
             if (model == 'translators') && transformation = hash.delete('transformation')
               file_creator.call("#{base_path}/#{model}/#{file}#{transformation_ext(hash['style'])}", transformation)
-            elsif model == 'algorithms'
-              file_creator.call("#{base_path}/#{model}/#{file}.rb", hash.delete('code'))
             end
             file_creator.call("#{base_path}/#{model}/#{file}.json", JSON.pretty_generate(hash))
           end
+        end
+        if algorithms = hash_data['algorithms']
+          ns_dirs = {}
+          algorithms.each do |alg_hash|
+            unless ns_dir = ns_dirs[ns = alg_hash['name_space']]
+              ns_dir = default = filename_scape(ns)
+              i = 0
+              while ns_dirs.values.include?(ns_dir)
+                ns_dir = "#{default}_#{i += 1}"
+              end
+              ns_dirs[ns] = ns_dir
+            end
+            file_creator.call("#{base_path}/algorithms/#{ns_dir}/#{alg_hash['name']}.rb", alg_hash.delete('code'))
+            file_creator.call("#{base_path}/algorithms/#{ns_dir}/#{alg_hash['name']}.json", JSON.pretty_generate(alg_hash))
+          end
+          file_creator.call("#{base_path}/algorithms/index.json", JSON.pretty_generate(ns_dirs.invert))
         end
         if libraries = hash_data['libraries']
           library_index = []
