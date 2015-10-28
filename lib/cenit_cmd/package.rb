@@ -48,11 +48,11 @@ module CenitCmd
     class << self
       def virtual_build(spec)
         package = new(spec.file_name)
-        package.gem_io = stream = StringIO.new
         package.spec = spec
         package.build(true)
-        stream.rewind
-        stream.read
+        gem_content = File.read(spec.file_name)
+        File.delete(spec.file_name)
+        gem_content
       end
     end
 
