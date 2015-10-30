@@ -333,6 +333,9 @@ module CenitCmd
               while set.include?(data_type_file)
                 data_type_file = "#{default}_#{i += 1}"
               end
+              if (schema = data_type_hash['schema']).is_a?(String)
+                data_type_hash['schema'] = JSON.parse(schema) rescue schema
+              end
               file_creator.call("#{base_path}/#{libraries_dir}/#{library_dir}/data_types/#{data_type_file}", JSON.pretty_generate(data_type_hash))
             end
           end
