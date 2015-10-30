@@ -249,7 +249,7 @@ module CenitCmd
         base_path = "lib/cenit/collection/#{collection_name}"
         shared_data = data.is_a?(Hash) ? data : JSON.parse(data)
         hash_data = shared_data['data']
-        %w(flows connection_roles translators events connections webhooks algorithms libraries).each do |model|
+        %w(flows connection_roles translators events connections webhooks algorithms libraries custom_validators).each do |model|
           next unless hash_model = hash_data[model].to_a
           unless respond_to?(store_method = "store_#{model.singularize}")
             store_method = :store_object
