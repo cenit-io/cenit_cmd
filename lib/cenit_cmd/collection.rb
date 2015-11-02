@@ -249,7 +249,7 @@ module CenitCmd
         base_path = "lib/cenit/collection/#{collection_name}"
         shared_data = data.is_a?(Hash) ? data : JSON.parse(data)
         hash_data = shared_data['data']
-        %w(flows connection_roles translators events connections webhooks algorithms libraries custom_validators).each do |model|
+        %w(flows connection_roles translators events connections webhooks algorithms libraries custom_validators data).each do |model|
           next unless hash_model = hash_data[model].to_a
           unless respond_to?(store_method = "store_#{model.singularize}")
             store_method = :store_object
@@ -258,7 +258,8 @@ module CenitCmd
           set = Set.new
           index = []
           hash_model.each do |hash|
-            hash['namespace'] = ns = hash['namespace'].to_s.strip
+            ns = hash['namespace'].to_s.strip
+            hash['namespace'] = ns if hash.has_key?('namespace')
             unless ns_dir = ns_dirs[ns]
               ns_dir = default = filename_scape(ns)
               i = 0
@@ -343,6 +344,11 @@ module CenitCmd
         else
           nil
         end
+      end
+
+      def store_datum(file_creator, base_path, obj_dir, ns_dir, obj_name, obj_hash)
+        file_creator.call("#{base_path}/#{obj_dir}/#{obj_name}.json", JSON.pretty_generate(obj_hash))
+        nil
       end
 
       def transformation_ext(style)
