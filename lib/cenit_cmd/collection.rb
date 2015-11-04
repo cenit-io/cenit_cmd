@@ -244,12 +244,146 @@ module CenitCmd
         end
       end
 
+      def base_path
+        "lib/cenit/collection/#{collection_name}"
+      end
+
+      DATA_ENTRIES = %w(flows connection_roles translators events connections webhooks algorithms libraries custom_validators data)
+
+      def collect_data
+        self.class.collect_data(base_path)
+      end
+
+      class << self
+        def collect_data(base_path)
+          data = {}
+          DATA_ENTRIES.each do |model|
+            if File.directory?(dir_path = base_path + "/#{model}")
+              Dir.open(dir_path) do |dir|
+                unless respond_to?(collect_objects_method = "do_collect_#{model}")
+                  collect_objects_method = :do_collect_objects
+                end
+                unless respond_to?(collect_object_method = "do_collect_#{model.singularize}")
+                  collect_object_method = :do_collect_object
+                end
+                if (objects = send(collect_objects_method, dir, collect_object_method)).present?
+                  data[model] = objects
+                end
+              end
+            end
+          end
+          data
+        end
+
+        def do_collect_objects(dir, collect_object_method)
+          objects = []
+          dir.each do |ns_file|
+            next if %w(. ..).include?(ns_file)
+            Dir.open(dir.path + '/' + ns_file) do |ns_dir|
+              ns_dir.each do |obj_file|
+                next if %w(. ..).include?(obj_file)
+                if obj_hash = send(collect_object_method, ns_dir.path + '/' + obj_file)
+                  objects << obj_hash
+                end
+              end
+            end
+          end
+          objects
+        end
+
+        def do_collect_object(obj_file)
+          obj_file.end_with?('.json') && obj_hash = JSON.parse(File.read(obj_file)) rescue nil
+        end
+
+        def do_collect_translator(obj_file)
+          if translator = do_collect_object(obj_file)
+            translator['transformation'] = File.read(obj_file.gsub(/\.json\Z/, transformation_ext(translator['style']))) rescue nil
+          end
+          translator
+        end
+
+        def do_collect_algorithm(obj_file)
+          if algorithm = do_collect_object(obj_file)
+            algorithm['code'] = File.read(obj_file.gsub(/\.json\Z/, '.rb')) rescue nil
+          end
+          algorithm
+        end
+
+        def do_collect_libraries(dir, collect_library_method)
+          libraries = []
+          if File.exist?(index_path = "#{dir.path}/index.json")
+            (JSON.parse(File.read(index_path)) rescue []).each do |library_hash|
+              next unless library_hash.has_key?('name')
+              library_ref = {'_reference' => true, 'name' => library_hash['name'] = library_hash['name'].to_s.strip}
+              hosts = library_hash['hosts']|| {}
+              if File.directory?(library_path = dir.path + '/' + (library_hash['dir'] || library_hash['file']))
+                Dir.open(library_path) do |library_dir|
+                  schemas = []
+                  if File.directory?(path = "#{library_dir.path}/schemas")
+                    Dir.open(path) do |schemas_dir|
+                      schemas_dir.each do |file|
+                        next if %w(. ..).include?(file)
+                        base_uri = (File.directory?(schemas_dir.path + '/' + file) && hosts[file]) || ''
+                        base_uri += '/' if base_uri.present?
+                        do_collect_schemas('', schemas_dir.path, file, schemas, base_uri, library_ref)
+                      end
+                    end
+                  end
+                  if schemas.present?
+                    library_hash['schemas'] = schemas
+                  else
+                    library_hash.delete('schemas')
+                  end
+                  data_types = []
+                  if File.directory?(path = "#{library_dir.path}/data_types")
+                    Dir.open(path) do |data_types_dir|
+                      data_types_dir.each do |file|
+                        next if File.directory?(path = data_types_dir.path + '/' + file)
+                        if data_type_hash = JSON.parse(File.read(path)) rescue nil
+                          data_types << data_type_hash
+                        end
+                      end
+                    end
+                  end
+                  if data_types.present?
+                    library_hash['data_types'] = data_types
+                  else
+                    library_hash.delete('data_types')
+                  end
+                end
+                library_hash.keep_if { |key, _| %w(name slug schemas data_types).include?(key) }
+                libraries << library_hash if library_hash.present?
+              end
+            end
+          end
+          libraries
+        end
+
+        def do_collect_schemas(relative_path, base_path, file, schemas, base_uri, library_ref)
+          if File.directory?(full_path = base_path + '/' + file)
+            Dir.open(full_path) do |dir|
+              dir.each do |file|
+                next if %w(. ..).include?(file)
+                do_collect_schemas((relative_path.present? ? relative_path + '/' : '') + file, dir.path, file, schemas, base_uri, library_ref)
+              end
+            end
+          else
+            if schema = File.read(full_path) rescue nil
+              schemas << {'uri' => base_uri + relative_path, 'schema' => schema, 'library' => library_ref}
+            end
+          end
+        end
+
+        def do_collect_data(dir, collect_data_method)
+          [] #TODO Collect records data
+        end
+      end
+
       def deploy_data(data, file_creator = nil)
         file_creator ||= @file_creator || ->(destination, content) { create_file(destination, content) }
-        base_path = "lib/cenit/collection/#{collection_name}"
         shared_data = data.is_a?(Hash) ? data : JSON.parse(data)
         hash_data = shared_data['data']
-        %w(flows connection_roles translators events connections webhooks algorithms libraries custom_validators data).each do |model|
+        DATA_ENTRIES.each do |model|
           next unless hash_model = hash_data[model].to_a
           unless respond_to?(store_method = "store_#{model.singularize}")
             store_method = :store_object
@@ -305,7 +439,7 @@ module CenitCmd
               if uri = schema['uri']
                 uri = URI.parse(uri)
                 host_dir = nil
-                if (host = uri.host) && !(host_dir = host_dirs.keys.detect { |dir| host_dirs[dir] == host })
+                if (host = uri.to_s.split(uri.path).first).present? && !(host_dir = host_dirs.keys.detect { |dir| host_dirs[dir] == host })
                   host_dir = default = filename_scape(host)
                   i = 0
                   while host_dirs[host_dir]
@@ -340,7 +474,7 @@ module CenitCmd
               file_creator.call("#{base_path}/#{libraries_dir}/#{library_dir}/data_types/#{data_type_file}", JSON.pretty_generate(data_type_hash))
             end
           end
-          {name: library_name, file: library_dir, hosts: host_dirs}
+          {name: library_name, slug: library_hash['slug'], dir: library_dir, hosts: host_dirs}
         else
           nil
         end
