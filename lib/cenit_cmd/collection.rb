@@ -93,6 +93,10 @@ module CenitCmd
       template 'rspec', '.rspec'
       template 'spec/spec_helper.rb.tt', 'spec/spec_helper.rb'
 
+      if @summary && @description && @authors && @email && @virtual_files
+        template 'gemspec', "#{file_name}.gemspec"
+      end
+
       @generated = true
 
       create_repo if @create_repo || @create_gem
@@ -102,12 +106,12 @@ module CenitCmd
       return unless @generated
       say %Q{
           #{'*' * 80}
-        
+
         Consider the next steps:
-        
+
         Move to the new collection folder.
         $ cd #{file_name}
-        
+
         Create a new git and related GitHub's repository
         $ rake create_repo
 
@@ -133,13 +137,15 @@ module CenitCmd
 
       def build_gem(data)
 
-        virtual_files = []
+        @virtual_files = []
 
         %w(name summary description homepage).each { |option| instance_variable_set(:"@#{option}", data[option]) }
         @file_name = filename_scape(data['name'])
         @source = data
         @arguments_required = false
-        @file_creator = ->(file_name, content) { virtual_files << CenitCmd::VirtualFile.new(file_name, content) }
+        @file_creator = ->(file_name, content) { @virtual_files << CenitCmd::VirtualFile.new(file_name, content) }
+        @authors = data['authors'].collect { |author| author['name'] }
+        @email = data['authors'].collect { |author| author['email'] }
 
         generate
 
@@ -149,9 +155,9 @@ module CenitCmd
           s.date = Time.now
           s.summary = @summary
           s.description = @description
-          s.authors = data['authors'].collect { |author| author['name'] },
-            s.email = data['authors'].collect { |author| author['email'] },
-            s.virtual_files = virtual_files
+          s.authors = @authors
+          s.email = @email
+          s.virtual_files = @virtual_files
           s.homepage = @homepage
         end
 

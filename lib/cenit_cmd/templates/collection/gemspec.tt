@@ -1,0 +1,11 @@
+Gem::Specification.new do |s|
+  s.name        = '<%= file_name %>'
+  s.version     = '<%= @gem_version %>'
+  s.date        = '<%= Time.now %>'
+  s.summary     = "<%= @summary %>"
+  s.description = "<%= @description %>"
+  s.authors     = [<%= @authors.collect { |name| '"' + name + '"' }.join(', ') %>]
+  s.email       = [<%= @email.collect { |email| '"' + email + '"' }.join(', ') %>]
+  s.files       = [<%= @virtual_files.collect { |file| '"' + file.name + '"' }.join(', ') %>]
+  s.homepage    = "<%= @homepage %>"
+end
