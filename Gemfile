@@ -4,6 +4,7 @@ gem 'rspec', :require => 'spec'
 
 # Specify your gem's dependencies
 gemspec
+gem 'thor'
 gem 'json'
 gem 'activesupport'
 gem 'jeweler'

@@ -93,6 +93,10 @@ module CenitCmd
       template 'rspec', '.rspec'
       template 'spec/spec_helper.rb.tt', 'spec/spec_helper.rb'
 
+      if @summary && @description && @authors && @email && @virtual_files
+        template 'gemspec', "#{file_name}.gemspec"
+      end
+
       @generated = true
 
       create_repo if @create_repo || @create_gem
@@ -102,12 +106,12 @@ module CenitCmd
       return unless @generated
       say %Q{
           #{'*' * 80}
-        
+
         Consider the next steps:
-        
+
         Move to the new collection folder.
         $ cd #{file_name}
-        
+
         Create a new git and related GitHub's repository
         $ rake create_repo
 
@@ -133,13 +137,15 @@ module CenitCmd
 
       def build_gem(data)
 
-        virtual_files = []
+        @virtual_files = []
 
         %w(name summary description homepage).each { |option| instance_variable_set(:"@#{option}", data[option]) }
         @file_name = filename_scape(data['name'])
         @source = data
         @arguments_required = false
-        @file_creator = ->(file_name, content) { virtual_files << CenitCmd::VirtualFile.new(file_name, content) }
+        @file_creator = ->(file_name, content) { @virtual_files << CenitCmd::VirtualFile.new(file_name, content) }
+        @authors = data['authors'].collect { |author| author['name'] }
+        @email = data['authors'].collect { |author| author['email'] }
 
         generate
 
@@ -149,9 +155,9 @@ module CenitCmd
           s.date = Time.now
           s.summary = @summary
           s.description = @description
-          s.authors = data['authors'].collect { |author| author['name'] },
-            s.email = data['authors'].collect { |author| author['email'] },
-            s.virtual_files = virtual_files
+          s.authors = @authors
+          s.email = @email
+          s.virtual_files = @virtual_files
           s.homepage = @homepage
         end
 
@@ -244,30 +250,157 @@ module CenitCmd
         end
       end
 
-      def deploy_data(data, file_creator = nil)
-        file_creator ||= @file_creator || ->(destination, content) { create_file(destination, content) }
-        base_path = "lib/cenit/collection/#{collection_name}"
-        shared_data = data.is_a?(Hash) ? data : JSON.parse(data)
-        hash_data = shared_data['data']
-        %w(flows connection_roles translators events connections webhooks).each do |model|
-          next unless hash_model = hash_data[model].to_a
-          set = Set.new
-          hash_model.each do |hash|
-            next unless file = default = filename_scape(hash['name'])
-            i = 0
-            while set.include?(file)
-              file = "#{default}_#{i += 1}"
+      def base_path
+        "lib/cenit/collection/#{collection_name}"
+      end
+
+      DATA_ENTRIES = %w(flows connection_roles translators events connections webhooks algorithms libraries custom_validators data)
+
+      def collect_data
+        self.class.collect_data(base_path)
+      end
+
+      class << self
+        def collect_data(base_path)
+          data = {}
+          DATA_ENTRIES.each do |model|
+            if File.directory?(dir_path = base_path + "/#{model}")
+              Dir.open(dir_path) do |dir|
+                unless respond_to?(collect_objects_method = "do_collect_#{model}")
+                  collect_objects_method = :do_collect_objects
+                end
+                unless respond_to?(collect_object_method = "do_collect_#{model.singularize}")
+                  collect_object_method = :do_collect_object
+                end
+                if (objects = send(collect_objects_method, dir, collect_object_method)).present?
+                  data[model] = objects
+                end
+              end
             end
-            if (model == 'translators') && transformation = hash.delete('transformation')
-              file_creator.call("#{base_path}/#{model}/#{file}#{transformation_ext(hash['style'])}", transformation)
+          end
+          data
+        end
+
+        def do_collect_objects(dir, collect_object_method)
+          objects = []
+          dir.each do |ns_file|
+            next if %w(. ..).include?(ns_file)
+            Dir.open(dir.path + '/' + ns_file) do |ns_dir|
+              ns_dir.each do |obj_file|
+                next if %w(. ..).include?(obj_file)
+                if obj_hash = send(collect_object_method, ns_dir.path + '/' + obj_file)
+                  objects << obj_hash
+                end
+              end
             end
-            file_creator.call("#{base_path}/#{model}/#{file}.json", JSON.pretty_generate(hash))
+          end
+          objects
+        end
+
+        def do_collect_object(obj_file)
+          obj_file.end_with?('.json') && obj_hash = JSON.parse(File.read(obj_file)) rescue nil
+        end
+
+        def do_collect_translator(obj_file)
+          if translator = do_collect_object(obj_file)
+            translator['transformation'] = File.read(obj_file.gsub(/\.json\Z/, transformation_ext(translator['style']))) rescue nil
+          end
+          translator
+        end
+
+        def do_collect_algorithm(obj_file)
+          if algorithm = do_collect_object(obj_file)
+            algorithm['code'] = File.read(obj_file.gsub(/\.json\Z/, '.rb')) rescue nil
+          end
+          algorithm
+        end
+
+        def do_collect_libraries(dir, collect_library_method)
+          libraries = []
+          if File.exist?(index_path = "#{dir.path}/index.json")
+            (JSON.parse(File.read(index_path)) rescue []).each do |library_hash|
+              next unless library_hash.has_key?('name')
+              library_ref = {'_reference' => true, 'name' => library_hash['name'] = library_hash['name'].to_s.strip}
+              hosts = library_hash['hosts']|| {}
+              if File.directory?(library_path = dir.path + '/' + (library_hash['dir'] || library_hash['file']))
+                Dir.open(library_path) do |library_dir|
+                  schemas = []
+                  if File.directory?(path = "#{library_dir.path}/schemas")
+                    Dir.open(path) do |schemas_dir|
+                      schemas_dir.each do |file|
+                        next if %w(. ..).include?(file)
+                        base_uri = (File.directory?(schemas_dir.path + '/' + file) && hosts[file]) || ''
+                        base_uri += '/' if base_uri.present?
+                        do_collect_schemas('', schemas_dir.path, file, schemas, base_uri, library_ref)
+                      end
+                    end
+                  end
+                  if schemas.present?
+                    library_hash['schemas'] = schemas
+                  else
+                    library_hash.delete('schemas')
+                  end
+                  data_types = []
+                  if File.directory?(path = "#{library_dir.path}/data_types")
+                    Dir.open(path) do |data_types_dir|
+                      data_types_dir.each do |file|
+                        next if File.directory?(path = data_types_dir.path + '/' + file)
+                        if data_type_hash = JSON.parse(File.read(path)) rescue nil
+                          data_types << data_type_hash
+                        end
+                      end
+                    end
+                  end
+                  if data_types.present?
+                    library_hash['data_types'] = data_types
+                  else
+                    library_hash.delete('data_types')
+                  end
+                end
+                library_hash.keep_if { |key, _| %w(name slug schemas data_types).include?(key) }
+                libraries << library_hash if library_hash.present?
+              end
+            end
+          end
+          libraries
+        end
+
+        def do_collect_schemas(relative_path, base_path, file, schemas, base_uri, library_ref)
+          if File.directory?(full_path = base_path + '/' + file)
+            Dir.open(full_path) do |dir|
+              dir.each do |file|
+                next if %w(. ..).include?(file)
+                do_collect_schemas((relative_path.present? ? relative_path + '/' : '') + file, dir.path, file, schemas, base_uri, library_ref)
+              end
+            end
+          else
+            if schema = File.read(full_path) rescue nil
+              schemas << {'uri' => base_uri + relative_path, 'schema' => schema, 'library' => library_ref}
+            end
           end
         end
-        if algorithms = hash_data['algorithms']
-          ns_dirs = {}
-          algorithms.each do |alg_hash|
-            unless ns_dir = ns_dirs[ns = alg_hash['name_space']]
+
+        def do_collect_data(dir, collect_data_method)
+          [] #TODO Collect records data
+        end
+      end
+
+      def deploy_data(data, file_creator = nil)
+        file_creator ||= @file_creator || ->(destination, content) { create_file(destination, content) }
+        shared_data = data.is_a?(Hash) ? data : JSON.parse(data)
+        hash_data = shared_data['data']
+        DATA_ENTRIES.each do |model|
+          next unless hash_model = hash_data[model].to_a
+          unless respond_to?(store_method = "store_#{model.singularize}")
+            store_method = :store_object
+          end
+          ns_dirs = {'' => 'default'}
+          set = Set.new
+          index = []
+          hash_model.each do |hash|
+            ns = hash['namespace'].to_s.strip
+            hash['namespace'] = ns if hash.has_key?('namespace')
+            unless ns_dir = ns_dirs[ns]
               ns_dir = default = filename_scape(ns)
               i = 0
               while ns_dirs.values.include?(ns_dir)
@@ -275,52 +408,87 @@ module CenitCmd
               end
               ns_dirs[ns] = ns_dir
             end
-            file_creator.call("#{base_path}/algorithms/#{ns_dir}/#{alg_hash['name']}.rb", alg_hash.delete('code'))
-            file_creator.call("#{base_path}/algorithms/#{ns_dir}/#{alg_hash['name']}.json", JSON.pretty_generate(alg_hash))
-          end
-          file_creator.call("#{base_path}/algorithms/index.json", JSON.pretty_generate(ns_dirs.invert))
-        end
-        if libraries = hash_data['libraries']
-          library_index = []
-          set = Set.new
-          libraries.each do |library|
-            if library_name = library['name']
-              host_dirs = {}
-              library_file = default = filename_scape(library_name)
-              i = 0
-              while set.include?(library_file)
-                library_file = "#{default}_#{i += 1}"
-              end
-              library['schemas'].each do |schema|
-                if uri = schema['uri']
-                  uri = URI.parse(uri)
-                  host_dir = nil
-                  if (host = uri.host) && !(host_dir = host_dirs.keys.detect { |dir| host_dirs[dir] == host })
-                    host_dir = default = filename_scape(host)
-                    i = 0
-                    while host_dirs[host_dir]
-                      host_dir = "#{default}_#{i += 1}"
-                    end
-                    host_dirs[host_dir] = host
-                  end
-                  schema_file = uri.path
-                  schema_file = schema_file.from(1) if schema_file.start_with?('/')
-                  schema_file = "#{host_dir}/#{schema_file}" if host_dir
-                  schema =
-                    begin
-                      JSON.pretty_generate(JSON.parse(schema['schema']))
-                    rescue
-                      Nokogiri::XML(schema['schema']).to_xml rescue nil
-                    end
-                  file_creator.call("#{base_path}/libraries/#{library_file}/#{schema_file}", schema)
-                end
-              end
-              library_index << {name: library_name, file: library_file, hosts: host_dirs}
+            next unless obj_name = default = filename_scape(hash['name'])
+            i = 0
+            while set.include?(obj_name)
+              obj_name = "#{default}_#{i += 1}"
+            end
+            if obj_index = send(store_method, file_creator, base_path, model, ns_dir, obj_name, hash)
+              index << obj_index
             end
           end
-          file_creator.call("#{base_path}/libraries/index.json", JSON.pretty_generate(library_index))
+          file_creator.call("#{base_path}/#{model}/index.json", JSON.pretty_generate(index)) if index.present?
         end
         file_creator.call("#{base_path}/index.json", JSON.pretty_generate(shared_data.except('data')))
+      end
+
+      def store_object(file_creator, base_path, obj_dir, ns_dir, obj_name, obj_hash)
+        file_creator.call("#{base_path}/#{obj_dir}/#{ns_dir}/#{obj_name}.json", JSON.pretty_generate(obj_hash))
+        nil
+      end
+
+      def store_translator(file_creator, base_path, obj_dir, ns_dir, obj_name, translator_hash)
+        file_creator.call("#{base_path}/#{obj_dir}/#{ns_dir}/#{obj_name}#{transformation_ext(translator_hash['style'])}", translator_hash.delete('transformation'))
+        store_object(file_creator, base_path, obj_dir, ns_dir, obj_name, translator_hash)
+      end
+
+      def store_algorithm(file_creator, base_path, obj_dir, ns_dir, obj_name, algorithm_hash)
+        file_creator.call("#{base_path}/#{obj_dir}/#{ns_dir}/#{obj_name}.rb", algorithm_hash.delete('code'))
+        store_object(file_creator, base_path, obj_dir, ns_dir, obj_name, algorithm_hash)
+      end
+
+      def store_library(file_creator, base_path, libraries_dir, ns_dir, library_dir, library_hash)
+        if (library_name = library_hash['name'].to_s.strip).present?
+          host_dirs = {}
+          if schemas = library_hash['schemas']
+            schemas.each do |schema|
+              if uri = schema['uri']
+                uri = URI.parse(uri)
+                host_dir = nil
+                if (host = uri.to_s.split(uri.path).first).present? && !(host_dir = host_dirs.keys.detect { |dir| host_dirs[dir] == host })
+                  host_dir = default = filename_scape(host)
+                  i = 0
+                  while host_dirs[host_dir]
+                    host_dir = "#{default}_#{i += 1}"
+                  end
+                  host_dirs[host_dir] = host
+                end
+                schema_file = uri.path
+                schema_file = schema_file.from(1) if schema_file.start_with?('/')
+                schema_file = "#{host_dir}/#{schema_file}" if host_dir
+                schema =
+                  begin
+                    JSON.pretty_generate(JSON.parse(schema['schema']))
+                  rescue
+                    Nokogiri::XML(schema['schema']).to_xml rescue nil
+                  end
+                file_creator.call("#{base_path}/#{libraries_dir}/#{library_dir}/schemas/#{schema_file}", schema)
+              end
+            end
+          end
+          if data_types = library_hash['data_types']
+            set = Set.new
+            data_types.each do |data_type_hash|
+              data_type_file = default = filename_scape(data_type_hash['name'])
+              i = 0
+              while set.include?(data_type_file)
+                data_type_file = "#{default}_#{i += 1}"
+              end
+              if (schema = data_type_hash['schema']).is_a?(String)
+                data_type_hash['schema'] = JSON.parse(schema) rescue schema
+              end
+              file_creator.call("#{base_path}/#{libraries_dir}/#{library_dir}/data_types/#{data_type_file}", JSON.pretty_generate(data_type_hash))
+            end
+          end
+          {name: library_name, slug: library_hash['slug'], dir: library_dir, hosts: host_dirs}
+        else
+          nil
+        end
+      end
+
+      def store_datum(file_creator, base_path, obj_dir, ns_dir, obj_name, obj_hash)
+        file_creator.call("#{base_path}/#{obj_dir}/#{obj_name}.json", JSON.pretty_generate(obj_hash))
+        nil
       end
 
       def transformation_ext(style)
@@ -344,9 +512,9 @@ module CenitCmd
 
       def filename_scape(name)
         name.gsub(/[^\w\s_-]+/, '')
-        .gsub(/(^|\b\s)\s+($|\s?\b)/, '\\1\\2')
-        .gsub(/\s+/, '_')
-        .downcase
+          .gsub(/(^|\b\s)\s+($|\s?\b)/, '\\1\\2')
+          .gsub(/\s+/, '_')
+          .downcase
       end
 
       def create_repo

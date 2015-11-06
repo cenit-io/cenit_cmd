@@ -7,8 +7,8 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = "cenit_cmd"
   s.version     = CenitCmd::VERSION
-  s.authors     = ['Miguel Sancho','Asnioby Hernandez']
-  s.email       = ['sanchojaf@gmail.com','asnioby@gmail.com']
+  s.authors     = ['Miguel Sancho','Asnioby Hernandez', 'Maikel Arcia']
+  s.email       = ['sanchojaf@gmail.com','asnioby@gmail.com', 'macarci@gmail.com']
   s.homepage    = "https://github.com/openjaf/cenit_cmd"
   s.license     = %q{MIT}
   s.summary     = %q{Cenit Hub command line utility}

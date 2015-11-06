@@ -20,7 +20,7 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'rspec'
 require 'hello-gem'
 
-require "cenit/collection/<%= collection_name %>/build"
+require 'cenit/collection/<%= collection_name %>'
 require 'cenit/client'
 
 # Requires supporting files with custom matchers and macros, etc,
