@@ -1,4 +1,3 @@
-require 'byebug'
 require 'pathname'
 require 'json'
 require 'fileutils'
